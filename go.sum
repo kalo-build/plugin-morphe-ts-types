@@ -12,6 +12,8 @@ github.com/kaloseia/go-util v0.0.0-20240707192647-19efb1b2840c h1:wdudt0nKeKh3pU
 github.com/kaloseia/go-util v0.0.0-20240707192647-19efb1b2840c/go.mod h1:gLFd0eirWSNNgX7c6fI5rbOimTII2Mpd/m91tq0YEtg=
 github.com/kaloseia/morphe-go v0.0.0-20240707144350-d04da8be0ed6 h1:cJdr/EDDq4eCtA86PPE3U1gueAyhUs0SgpRR8l8Grt0=
 github.com/kaloseia/morphe-go v0.0.0-20240707144350-d04da8be0ed6/go.mod h1:ntO0+pSBlbIXOFk+ictFksqA24HISb55TezG9//u/IM=
+github.com/kaloseia/morphe-go v0.0.0-20240707200223-03b5c14e5066 h1:Rt2TtkcmRNMUJnMFnW3znGthqcZhwG1k48ZEGA0VSP8=
+github.com/kaloseia/morphe-go v0.0.0-20240707200223-03b5c14e5066/go.mod h1:ntO0+pSBlbIXOFk+ictFksqA24HISb55TezG9//u/IM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=

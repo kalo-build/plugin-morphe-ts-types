@@ -138,3 +138,30 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects() {
 	suite.Equal(tsField10.Name, "UUID")
 	suite.Equal(tsField10.Type, tsdef.TsTypeString)
 }
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoFields() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name:   "Basic",
+		Fields: map[string]yaml.ModelField{},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"UUID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{},
+	}
+
+	allTsObjectTypes, allTsObjectTypesErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+
+	suite.NotNil(allTsObjectTypesErr)
+	suite.ErrorContains(allTsObjectTypesErr, "morphe model has no fields")
+
+	suite.Nil(allTsObjectTypes)
+}
+

@@ -48,11 +48,10 @@ func morpheModelToTsObjectTypes(config cfg.MorpheModelsConfig, model yaml.Model)
 	if validateConfigErr != nil {
 		return nil, validateConfigErr
 	}
-	// TODO: Move validation to model itself
-	/*validateMorpheErr := validateMorpheModelDefinition(model)
+	validateMorpheErr := model.Validate()
 	if validateMorpheErr != nil {
 		return nil, validateMorpheErr
-	}*/
+	}
 
 	modelType, modelTypeErr := getModelObjectType(model)
 	if modelTypeErr != nil {

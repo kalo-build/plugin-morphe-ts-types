@@ -6,7 +6,7 @@ require (
 	github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df
 	github.com/kaloseia/clone v0.0.0-20240601081950-41de0e12ccb4
 	github.com/kaloseia/go-util v0.0.0-20240707192647-19efb1b2840c
-	github.com/kaloseia/morphe-go v0.0.0-20240707144350-d04da8be0ed6
+	github.com/kaloseia/morphe-go v0.0.0-20240707200223-03b5c14e5066
 	github.com/stretchr/testify v1.9.0
 )
 
