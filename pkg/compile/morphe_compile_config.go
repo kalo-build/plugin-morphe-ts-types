@@ -14,8 +14,8 @@ type MorpheCompileConfig struct {
 
 	RegistryHooks r.LoadMorpheRegistryHooks
 
-	ModelWriter write.TypescriptTypeWriter
+	ModelWriter write.TsObjectWriter
 	ModelHooks  hook.CompileMorpheModel
 
-	WriteTypeHooks hook.WriteTsType
+	WriteObjectHooks hook.WriteTsObject
 }
