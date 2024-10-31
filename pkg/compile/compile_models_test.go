@@ -217,12 +217,115 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne()
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "BasicParentID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeNumber,
+	})
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "BasicParent")
 	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
 		ValueType: tsdef.TsTypeObject{Name: "BasicParent"},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "ID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForMany() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"BasicParent": {
+				Type: "ForMany",
+			},
+		},
+	}
+	model1 := yaml.Model{
+		Name: "BasicParent",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r := registry.NewRegistry()
+	r.SetModel("Basic", model0)
+	r.SetModel("BasicParent", model1)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Basic")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "ID")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "String")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "BasicParentIDs")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeNumber,
+		},
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "BasicParents")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeObject{Name: "BasicParent"},
+		},
 	})
 
 	tsObject1 := allTsObjects[1]

@@ -57,7 +57,7 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 		}
 
 		if yamlops.IsRelationFor(modelRelation.Type) {
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(relatedModelName, relatedModelDef)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relatedModelName, relatedModelDef)
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
@@ -70,7 +70,7 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 	return allFields, nil
 }
 
-func getRelatedTsFieldForMorpheModelPrimaryID(relatedModelName string, relatedModelDef yaml.Model) (tsdef.ObjectField, error) {
+func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelName string, relatedModelDef yaml.Model) (tsdef.ObjectField, error) {
 	relatedPrimaryIDFieldName, relatedIDFieldNameErr := yamlops.GetModelPrimaryIdentifierFieldName(relatedModelDef)
 	if relatedIDFieldNameErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w", relatedIDFieldNameErr)
@@ -85,9 +85,24 @@ func getRelatedTsFieldForMorpheModelPrimaryID(relatedModelName string, relatedMo
 	if !typeSupported {
 		return tsdef.ObjectField{}, ErrUnsupportedMorpheFieldType(relatedPrimaryIDFieldDef.Type)
 	}
+
+	if yamlops.IsRelationMany(relationType) {
+		tsIDField := tsdef.ObjectField{
+			Name: idFieldName + "s",
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{
+					ValueType: idFieldType,
+				},
+			},
+		}
+		return tsIDField, nil
+	}
+
 	tsIDField := tsdef.ObjectField{
 		Name: idFieldName,
-		Type: idFieldType,
+		Type: tsdef.TsTypeOptional{
+			ValueType: idFieldType,
+		},
 	}
 	return tsIDField, nil
 }
