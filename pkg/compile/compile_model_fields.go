@@ -56,13 +56,11 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 			return nil, relatedModelDefErr
 		}
 
-		if yamlops.IsRelationFor(modelRelation.Type) {
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relatedModelName, relatedModelDef)
-			if tsIDErr != nil {
-				return nil, tsIDErr
-			}
-			allFields = append(allFields, tsIDField)
+		tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relatedModelName, relatedModelDef)
+		if tsIDErr != nil {
+			return nil, tsIDErr
 		}
+		allFields = append(allFields, tsIDField)
 
 		tsRelatedField := getRelatedTsFieldForMorpheModelOptionalObject(modelRelation.Type, relatedModelName)
 		allFields = append(allFields, tsRelatedField)
