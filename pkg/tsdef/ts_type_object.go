@@ -28,6 +28,10 @@ func (t TsTypeObject) IsPromise() bool {
 	return false
 }
 
+func (t TsTypeObject) IsOptional() bool {
+	return false
+}
+
 func (t TsTypeObject) GetSyntax() string {
 	return t.Name
 }

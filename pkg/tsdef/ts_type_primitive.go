@@ -28,6 +28,10 @@ func (t TsTypePrimitive) IsPromise() bool {
 	return false
 }
 
+func (t TsTypePrimitive) IsOptional() bool {
+	return false
+}
+
 func (t TsTypePrimitive) GetSyntax() string {
 	return t.Syntax
 }

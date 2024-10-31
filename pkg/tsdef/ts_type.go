@@ -7,6 +7,7 @@ type TsType interface {
 	IsObject() bool
 	IsInterface() bool
 	IsPromise() bool
+	IsOptional() bool
 
 	GetSyntax() string
 }

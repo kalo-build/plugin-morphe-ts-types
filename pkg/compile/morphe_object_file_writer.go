@@ -38,6 +38,11 @@ func (w *MorpheObjectFileWriter) getAllObjectLines(mainObjectName string, object
 	for _, objectField := range objectDefinition.Fields {
 		fieldName := strcase.ToCamelCase(objectField.Name)
 		fieldTypeSyntax := objectField.Type.GetSyntax()
+		if objectField.Type.IsOptional() {
+			structFieldLine := fmt.Sprintf("\t%s?: %s", fieldName, fieldTypeSyntax)
+			allObjectLines = append(allObjectLines, structFieldLine)
+			continue
+		}
 		structFieldLine := fmt.Sprintf("\t%s: %s", fieldName, fieldTypeSyntax)
 		allObjectLines = append(allObjectLines, structFieldLine)
 	}

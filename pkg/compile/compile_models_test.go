@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/kaloseia/morphe-go/pkg/registry"
 	"github.com/kaloseia/morphe-go/pkg/yaml"
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile"
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/cfg"
@@ -78,7 +79,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects() {
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.Nil(allTsObjectsErr)
 	suite.Len(allTsObjects, 2)
@@ -140,6 +141,101 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects() {
 	suite.Equal(tsField10.Type, tsdef.TsTypeString)
 }
 
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"BasicParent": {
+				Type: "ForOne",
+			},
+		},
+	}
+	model1 := yaml.Model{
+		Name: "BasicParent",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r := registry.NewRegistry()
+	r.SetModel("Basic", model0)
+	r.SetModel("BasicParent", model1)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Basic")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "ID")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "String")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "BasicParentID")
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "BasicParent")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeObject{Name: "BasicParent"},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "ID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
 func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoModelName() {
 	modelHooks := hook.CompileMorpheModel{}
 
@@ -162,7 +258,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoModelName() {
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "morphe model has no name")
@@ -188,7 +284,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoFields() {
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "morphe model has no fields")
@@ -212,7 +308,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoIdentifiers() 
 		Related:     map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "morphe model has no identifiers")
@@ -258,7 +354,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_StartHook_Succes
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.Nil(allTsObjectsErr)
 	suite.Len(allTsObjects, 2)
@@ -321,7 +417,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_StartHook_Failur
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "compile model start hook error")
@@ -375,7 +471,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_SuccessHook_Succ
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.Nil(allTsObjectsErr)
 	suite.Len(allTsObjects, 2)
@@ -438,7 +534,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_SuccessHook_Fail
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "compile model success hook error")
@@ -468,7 +564,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_FailureHook_NoMo
 		Related:     map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, nil, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "Model Basic: morphe model has no identifiers")
