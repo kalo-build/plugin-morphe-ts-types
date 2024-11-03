@@ -47,7 +47,7 @@ func morpheModelToTsObjectTypes(config cfg.MorpheModelsConfig, r *registry.Regis
 	if validateConfigErr != nil {
 		return nil, validateConfigErr
 	}
-	validateMorpheErr := model.Validate()
+	validateMorpheErr := model.Validate(r.GetAllEnums())
 	if validateMorpheErr != nil {
 		return nil, validateMorpheErr
 	}

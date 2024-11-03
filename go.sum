@@ -18,6 +18,12 @@ github.com/kaloseia/morphe-go v0.0.0-20241031091656-425277394384 h1:Y2IkMFQFRsve
 github.com/kaloseia/morphe-go v0.0.0-20241031091656-425277394384/go.mod h1:ntO0+pSBlbIXOFk+ictFksqA24HISb55TezG9//u/IM=
 github.com/kaloseia/morphe-go v0.0.0-20241031092025-2f72cbc59f42 h1:4f4Y2SnN1zVwI6thJjeWdAJtoNdcsaKcCRvlWHhwR3g=
 github.com/kaloseia/morphe-go v0.0.0-20241031092025-2f72cbc59f42/go.mod h1:ntO0+pSBlbIXOFk+ictFksqA24HISb55TezG9//u/IM=
+github.com/kaloseia/morphe-go v0.0.0-20241102143953-5e448f57be0c h1:fsu5UI6Wj3xnuQ5YUEW8LKFxZg9VvyOUdElSkBHa7rI=
+github.com/kaloseia/morphe-go v0.0.0-20241102143953-5e448f57be0c/go.mod h1:ntO0+pSBlbIXOFk+ictFksqA24HISb55TezG9//u/IM=
+github.com/kaloseia/morphe-go v0.0.0-20241102160012-074938e72d0d h1:jZNL9/1v1Kp1SdbXTUeEBAtbaK8UkwjSTw3YV2UygeU=
+github.com/kaloseia/morphe-go v0.0.0-20241102160012-074938e72d0d/go.mod h1:ntO0+pSBlbIXOFk+ictFksqA24HISb55TezG9//u/IM=
+github.com/kaloseia/morphe-go v0.0.0-20241103094823-b042f5df5bd5 h1:PkJ1kD0gi0xImyy32TBslQUuvIRfAYau+kCA667mP+k=
+github.com/kaloseia/morphe-go v0.0.0-20241103094823-b042f5df5bd5/go.mod h1:0I0BhPQDYfUmZAdaEFRLf1DzR8Tdcg53QIFVIBcJNXE=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
