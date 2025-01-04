@@ -91,4 +91,9 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	gtEnumPath0 := gtEnumsDirPath + "/nationality.d.ts"
 	suite.FileExists(enumPath0)
 	suite.FileEquals(enumPath0, gtEnumPath0)
+
+	enumPath1 := enumsDirPath + "/universal-number.d.ts"
+	gtEnumPath1 := gtEnumsDirPath + "/universal-number.d.ts"
+	suite.FileExists(enumPath1)
+	suite.FileEquals(enumPath1, gtEnumPath1)
 }
