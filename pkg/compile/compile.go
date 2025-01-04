@@ -27,5 +27,16 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 	if writeAllModelsErr != nil {
 		return writeAllModelsErr
 	}
+
+	allStructureObjectDefs, compileAllStructuresErr := AllMorpheStructuresToTsObjects(config, r)
+	if compileAllStructuresErr != nil {
+		return compileAllStructuresErr
+	}
+
+	_, writeAllStructuresErr := WriteAllStructureObjectDefinitions(config, allStructureObjectDefs)
+	if writeAllStructuresErr != nil {
+		return writeAllStructuresErr
+	}
+
 	return nil
 }

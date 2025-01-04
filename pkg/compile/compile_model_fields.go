@@ -36,13 +36,13 @@ func getDirectTsFieldsForMorpheModel(allEnums map[string]yaml.Enum, modelFields 
 	for _, fieldName := range allFieldNames {
 		fieldDef := modelFields[fieldName]
 
-		tsEnumField := getEnumFieldAsTsFieldType(allEnums, fieldName, fieldDef.Type)
+		tsEnumField := getEnumFieldAsTsFieldType(allEnums, fieldName, string(fieldDef.Type))
 		if tsEnumField.Name != "" && tsEnumField.Type != nil {
 			allFields = append(allFields, tsEnumField)
 			continue
 		}
 
-		tsFieldType, typeSupported := typemap.MorpheFieldToTsField[fieldDef.Type]
+		tsFieldType, typeSupported := typemap.MorpheModelFieldToTsField[fieldDef.Type]
 		if !typeSupported {
 			return nil, ErrUnsupportedMorpheFieldType(fieldDef.Type)
 		}
@@ -79,12 +79,11 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 	return allFields, nil
 }
 
-func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, fieldType yaml.ModelFieldType) tsdef.ObjectField {
+func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, enumName string) tsdef.ObjectField {
 	if len(allEnums) == 0 {
 		return tsdef.ObjectField{}
 	}
 
-	enumName := string(fieldType)
 	_, enumTypeExists := allEnums[enumName]
 	if !enumTypeExists {
 		return tsdef.ObjectField{}
@@ -112,7 +111,7 @@ func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelN
 	if relatedIDFieldDefErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w (primary identifier)", relatedIDFieldDefErr)
 	}
-	idFieldType, typeSupported := typemap.MorpheFieldToTsField[relatedPrimaryIDFieldDef.Type]
+	idFieldType, typeSupported := typemap.MorpheModelFieldToTsField[relatedPrimaryIDFieldDef.Type]
 	if !typeSupported {
 		return tsdef.ObjectField{}, ErrUnsupportedMorpheFieldType(relatedPrimaryIDFieldDef.Type)
 	}

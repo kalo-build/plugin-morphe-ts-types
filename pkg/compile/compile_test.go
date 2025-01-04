@@ -20,9 +20,10 @@ type CompileTestSuite struct {
 	TestDirPath            string
 	TestGroundTruthDirPath string
 
-	EnumsDirPath    string
-	ModelsDirPath   string
-	EntitiesDirPath string
+	EnumsDirPath      string
+	ModelsDirPath     string
+	StructuresDirPath string
+	EntitiesDirPath   string
 }
 
 func TestCompileTestSuite(t *testing.T) {
@@ -35,6 +36,7 @@ func (suite *CompileTestSuite) SetupTest() {
 
 	suite.EnumsDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "enums")
 	suite.ModelsDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "models")
+	suite.StructuresDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "structures")
 	suite.EntitiesDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "entities")
 }
 
@@ -49,9 +51,10 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 
 	config := compile.MorpheCompileConfig{
 		MorpheLoadRegistryConfig: rcfg.MorpheLoadRegistryConfig{
-			RegistryEnumsDirPath:    suite.EnumsDirPath,
-			RegistryModelsDirPath:   suite.ModelsDirPath,
-			RegistryEntitiesDirPath: suite.EntitiesDirPath,
+			RegistryEnumsDirPath:      suite.EnumsDirPath,
+			RegistryStructuresDirPath: suite.StructuresDirPath,
+			RegistryModelsDirPath:     suite.ModelsDirPath,
+			RegistryEntitiesDirPath:   suite.EntitiesDirPath,
 		},
 
 		MorpheEnumsConfig: cfg.MorpheEnumsConfig{},
@@ -62,6 +65,11 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 		MorpheModelsConfig: cfg.MorpheModelsConfig{},
 		ModelWriter: &compile.MorpheObjectFileWriter{
 			TargetDirPath: workingDirPath + "/models",
+		},
+
+		MorpheStructuresConfig: cfg.MorpheStructuresConfig{},
+		StructureWriter: &compile.MorpheObjectFileWriter{
+			TargetDirPath: workingDirPath + "/structures",
 		},
 	}
 
@@ -96,4 +104,13 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	gtEnumPath1 := gtEnumsDirPath + "/universal-number.d.ts"
 	suite.FileExists(enumPath1)
 	suite.FileEquals(enumPath1, gtEnumPath1)
+
+	structuresDirPath := workingDirPath + "/structures"
+	gtStructuresDirPath := suite.TestGroundTruthDirPath + "/structures"
+	suite.DirExists(structuresDirPath)
+
+	structurePath0 := structuresDirPath + "/address.d.ts"
+	gtStructurePath0 := gtStructuresDirPath + "/address.d.ts"
+	suite.FileExists(structurePath0)
+	suite.FileEquals(structurePath0, gtStructurePath0)
 }
