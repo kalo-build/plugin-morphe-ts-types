@@ -34,6 +34,10 @@ func (t TsTypeArray) IsOptional() bool {
 	return false
 }
 
+func (t TsTypeArray) GetImports() []ObjectImport {
+	return t.ValueType.GetImports()
+}
+
 func (t TsTypeArray) GetSyntax() string {
 	return fmt.Sprintf("%s[]", t.ValueType.GetSyntax())
 }

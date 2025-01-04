@@ -1,6 +1,10 @@
+import { Person } from "./person"
+
 export type ContactInfo = {
 	email: string
 	id: number
+	personID?: number
+	person?: Person
 }
 
 export type ContactInfoIDEmail = {

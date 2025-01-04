@@ -2,6 +2,7 @@ package compile
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/kaloseia/go-util/core"
 	"github.com/kaloseia/go-util/strcase"
@@ -29,6 +30,17 @@ func (w *MorpheObjectFileWriter) WriteObject(mainObjectName string, objectDefini
 
 func (w *MorpheObjectFileWriter) getAllObjectLines(mainObjectName string, objectDefinition *tsdef.Object) ([]string, error) {
 	allObjectLines := []string{}
+
+	importLines, importsErr := w.getAllObjectImportLines(objectDefinition)
+	if importsErr != nil {
+		return nil, importsErr
+	}
+
+	if len(importLines) > 0 {
+		allObjectLines = append(allObjectLines, importLines...)
+		allObjectLines = append(allObjectLines, "")
+	}
+
 	if mainObjectName != objectDefinition.Name {
 		allObjectLines = append(allObjectLines, "")
 	}
@@ -49,4 +61,34 @@ func (w *MorpheObjectFileWriter) getAllObjectLines(mainObjectName string, object
 
 	allObjectLines = append(allObjectLines, "}")
 	return allObjectLines, nil
+}
+
+func (w *MorpheObjectFileWriter) getAllObjectImportLines(objectDefinition *tsdef.Object) ([]string, error) {
+	if len(objectDefinition.Imports) == 0 {
+		return nil, nil
+	}
+
+	filteredImportsMap := map[string]tsdef.ObjectImport{}
+	for _, objectImport := range objectDefinition.Imports {
+		filteredImportsMap[objectImport.ModulePath] = objectImport
+	}
+
+	allImportLines := []string{}
+
+	filteredImports := core.MapKeysSorted(filteredImportsMap)
+	for _, objectImportPath := range filteredImports {
+		objectImport := filteredImportsMap[objectImportPath]
+		if len(objectImport.ModuleNames) <= 3 {
+			importNames := strings.Join(objectImport.ModuleNames, ", ")
+			allImportLines = append(allImportLines, `import { `+importNames+` } from "`+objectImportPath+`"`)
+			continue
+		}
+		allImportLines = append(allImportLines, `import { `)
+		for _, importName := range objectImport.ModuleNames {
+			allImportLines = append(allImportLines, importName+`,`)
+		}
+		allImportLines = append(allImportLines, `} from "`+objectImportPath+`"`)
+	}
+
+	return allImportLines, nil
 }

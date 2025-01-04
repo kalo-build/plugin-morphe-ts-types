@@ -3,13 +3,15 @@ package tsdef
 import "github.com/kaloseia/clone"
 
 type Object struct {
-	Name   string
-	Fields []ObjectField
+	Name    string
+	Imports []ObjectImport
+	Fields  []ObjectField
 }
 
 func (s Object) DeepClone() Object {
 	return Object{
-		Name:   s.Name,
-		Fields: clone.DeepCloneSlice(s.Fields),
+		Name:    s.Name,
+		Imports: clone.DeepCloneSlice(s.Imports),
+		Fields:  clone.DeepCloneSlice(s.Fields),
 	}
 }

@@ -41,3 +41,7 @@ func (t TsTypeOptional) DeepClone() TsTypeOptional {
 		ValueType: DeepCloneTsType(t.ValueType),
 	}
 }
+
+func (t TsTypeOptional) GetImports() []ObjectImport {
+	return t.ValueType.GetImports()
+}

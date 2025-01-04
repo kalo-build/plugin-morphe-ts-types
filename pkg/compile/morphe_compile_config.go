@@ -22,4 +22,5 @@ type MorpheCompileConfig struct {
 	ModelHooks  hook.CompileMorpheModel
 
 	WriteObjectHooks hook.WriteTsObject
+	WriteEnumHooks   hook.WriteTsEnum
 }

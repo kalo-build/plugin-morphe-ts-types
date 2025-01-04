@@ -30,9 +30,9 @@ func MorpheModelToTsObjects(modelHooks hook.CompileMorpheModel, config cfg.Morph
 	if compileStartErr != nil {
 		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, compileStartErr)
 	}
-	allModelTypes, structsErr := morpheModelToTsObjectTypes(config, r, model)
-	if structsErr != nil {
-		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, structsErr)
+	allModelTypes, objectsErr := morpheModelToTsObjectTypes(config, r, model)
+	if objectsErr != nil {
+		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, objectsErr)
 	}
 
 	allModelTypes, compileSuccessErr := triggerCompileMorpheModelSuccess(modelHooks, allModelTypes)
@@ -114,6 +114,12 @@ func getModelObjectType(r *registry.Registry, model yaml.Model) (*tsdef.Object, 
 		return nil, fieldsErr
 	}
 	modelType.Fields = typeFields
+
+	objectImports, importsErr := getImportsForObjectFields(typeFields)
+	if importsErr != nil {
+		return nil, importsErr
+	}
+	modelType.Imports = objectImports
 	return &modelType, nil
 }
 
@@ -165,4 +171,22 @@ func getIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName strin
 		identifierFieldDefs = append(identifierFieldDefs, identifierFieldDef)
 	}
 	return identifierFieldDefs, nil
+}
+
+func getImportsForObjectFields(allFields []tsdef.ObjectField) ([]tsdef.ObjectImport, error) {
+	objectImportMap := map[string]tsdef.ObjectImport{}
+	for _, fieldDef := range allFields {
+		allFieldImports := fieldDef.Type.GetImports()
+		for _, fieldImport := range allFieldImports {
+			objectImportMap[fieldImport.ModulePath] = fieldImport
+		}
+	}
+
+	allModulePaths := core.MapKeysSorted(objectImportMap)
+
+	allObjectImports := []tsdef.ObjectImport{}
+	for _, modulePath := range allModulePaths {
+		allObjectImports = append(allObjectImports, objectImportMap[modulePath])
+	}
+	return allObjectImports, nil
 }

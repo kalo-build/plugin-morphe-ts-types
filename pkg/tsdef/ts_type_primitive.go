@@ -41,3 +41,7 @@ func (t TsTypePrimitive) DeepClone() TsTypePrimitive {
 		Syntax: t.Syntax,
 	}
 }
+
+func (t TsTypePrimitive) GetImports() []ObjectImport {
+	return nil
+}

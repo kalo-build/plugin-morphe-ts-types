@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kaloseia/go-util/core"
+	"github.com/kaloseia/go-util/strcase"
 	"github.com/kaloseia/morphe-go/pkg/registry"
 	"github.com/kaloseia/morphe-go/pkg/yaml"
 	"github.com/kaloseia/morphe-go/pkg/yamlops"
@@ -111,7 +112,10 @@ func getRelatedTsFieldForMorpheModelOptionalObject(relationType string, relatedM
 			Name: relatedModelName + "s",
 			Type: tsdef.TsTypeOptional{
 				ValueType: tsdef.TsTypeArray{
-					ValueType: tsdef.TsTypeObject{Name: relatedModelName},
+					ValueType: tsdef.TsTypeObject{
+						ModulePath: "./" + strcase.ToKebabCaseLower(relatedModelName),
+						Name:       relatedModelName,
+					},
 				},
 			},
 		}
@@ -121,7 +125,10 @@ func getRelatedTsFieldForMorpheModelOptionalObject(relationType string, relatedM
 	tsRelatedField := tsdef.ObjectField{
 		Name: relatedModelName,
 		Type: tsdef.TsTypeOptional{
-			ValueType: tsdef.TsTypeObject{Name: relatedModelName},
+			ValueType: tsdef.TsTypeObject{
+				ModulePath: "./" + strcase.ToKebabCaseLower(relatedModelName),
+				Name:       relatedModelName,
+			},
 		},
 	}
 	return tsRelatedField

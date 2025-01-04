@@ -20,6 +20,7 @@ type CompileTestSuite struct {
 	TestDirPath            string
 	TestGroundTruthDirPath string
 
+	EnumsDirPath    string
 	ModelsDirPath   string
 	EntitiesDirPath string
 }
@@ -32,6 +33,7 @@ func (suite *CompileTestSuite) SetupTest() {
 	suite.TestDirPath = testutils.GetTestDirPath()
 	suite.TestGroundTruthDirPath = filepath.Join(suite.TestDirPath, "ground-truth", "compile-minimal")
 
+	suite.EnumsDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "enums")
 	suite.ModelsDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "models")
 	suite.EntitiesDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "entities")
 }
@@ -40,25 +42,30 @@ func (suite *CompileTestSuite) TearDownTest() {
 	suite.TestDirPath = ""
 }
 
-func (suite *CompileTestSuite) TestMorpheToTypescriptObjects() {
+func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	workingDirPath := suite.TestDirPath + "/working"
 	suite.Nil(os.Mkdir(workingDirPath, 0644))
 	defer os.RemoveAll(workingDirPath)
 
 	config := compile.MorpheCompileConfig{
 		MorpheLoadRegistryConfig: rcfg.MorpheLoadRegistryConfig{
+			RegistryEnumsDirPath:    suite.EnumsDirPath,
 			RegistryModelsDirPath:   suite.ModelsDirPath,
 			RegistryEntitiesDirPath: suite.EntitiesDirPath,
 		},
 
-		MorpheModelsConfig: cfg.MorpheModelsConfig{},
+		MorpheEnumsConfig: cfg.MorpheEnumsConfig{},
+		EnumWriter: &compile.MorpheEnumFileWriter{
+			TargetDirPath: workingDirPath + "/enums",
+		},
 
+		MorpheModelsConfig: cfg.MorpheModelsConfig{},
 		ModelWriter: &compile.MorpheObjectFileWriter{
 			TargetDirPath: workingDirPath + "/models",
 		},
 	}
 
-	compileErr := compile.MorpheToTypescriptObjects(config)
+	compileErr := compile.MorpheToTypescript(config)
 
 	suite.NoError(compileErr)
 
@@ -75,4 +82,13 @@ func (suite *CompileTestSuite) TestMorpheToTypescriptObjects() {
 	gtModelPath1 := gtModelsDirPath + "/person.d.ts"
 	suite.FileExists(modelPath1)
 	suite.FileEquals(modelPath1, gtModelPath1)
+
+	enumsDirPath := workingDirPath + "/enums"
+	gtEnumsDirPath := suite.TestGroundTruthDirPath + "/enums"
+	suite.DirExists(enumsDirPath)
+
+	enumPath0 := enumsDirPath + "/nationality.d.ts"
+	gtEnumPath0 := gtEnumsDirPath + "/nationality.d.ts"
+	suite.FileExists(enumPath0)
+	suite.FileEquals(enumPath0, gtEnumPath0)
 }

@@ -9,5 +9,6 @@ type TsType interface {
 	IsPromise() bool
 	IsOptional() bool
 
+	GetImports() []ObjectImport
 	GetSyntax() string
 }

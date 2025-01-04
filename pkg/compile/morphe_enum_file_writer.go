@@ -2,6 +2,7 @@ package compile
 
 import (
 	"fmt"
+	ti "time"
 
 	"github.com/kaloseia/go-util/core"
 	"github.com/kaloseia/go-util/strcase"
@@ -35,13 +36,33 @@ func (w *MorpheEnumFileWriter) getAllEnumLines(enumName string, enumDefinition *
 
 	allEnumLines = append(allEnumLines, fmt.Sprintf(`export enum %s {`, enumDefinition.Name))
 
-	for _, enumEntry := range enumDefinition.Entries {
+	for enumIdx, enumEntry := range enumDefinition.Entries {
 		entryName := strcase.ToPascalCase(enumEntry.Name)
-		entryValue := enumEntry.Value
-		enumEntryLine := fmt.Sprintf("\t%s: %v", entryName, entryValue)
+		entryValue := w.formatEnumValue(enumEntry.Value)
+		enumEntryLine := fmt.Sprintf("\t%s = %v", entryName, entryValue)
+		if enumIdx != len(enumDefinition.Entries)-1 {
+			enumEntryLine += ","
+		}
 		allEnumLines = append(allEnumLines, enumEntryLine)
 	}
 
 	allEnumLines = append(allEnumLines, "}")
 	return allEnumLines, nil
+}
+
+func (w *MorpheEnumFileWriter) formatEnumValue(value any) string {
+	switch typedValue := value.(type) {
+	case string:
+		return fmt.Sprintf("'%v'", typedValue)
+	case ti.Time:
+		formattedValue := ""
+		if typedValue.Hour() == 0 && typedValue.Minute() == 0 && typedValue.Second() == 0 && typedValue.Nanosecond() == 0 {
+			formattedValue = typedValue.Format("2006-01-02")
+		} else {
+			formattedValue = typedValue.Format(ti.RFC3339)
+		}
+		return fmt.Sprintf("'%v'", formattedValue)
+	default:
+		return fmt.Sprintf("%v", typedValue)
+	}
 }
