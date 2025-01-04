@@ -1,9 +1,11 @@
+import { Nationality } from "../enums/nationality"
 import { ContactInfo } from "./contact-info"
 
 export type Person = {
 	firstName: string
 	id: number
 	lastName: string
+	nationality: Nationality
 	contactInfoID?: number
 	contactInfo?: ContactInfo
 }

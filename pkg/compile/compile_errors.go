@@ -7,6 +7,7 @@ import (
 	"github.com/kaloseia/morphe-go/pkg/yaml"
 )
 
+var ErrNoRegistry = errors.New("registry not initialized")
 var ErrNoMorpheModelName = errors.New("morphe model has no name")
 var ErrNoMorpheModelFields = errors.New("morphe model has no fields")
 var ErrNoMorpheModelIdentifiers = errors.New("morphe model has no identifiers")

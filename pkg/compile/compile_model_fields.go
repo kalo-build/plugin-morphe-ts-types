@@ -13,7 +13,10 @@ import (
 )
 
 func getTsFieldsForMorpheModel(r *registry.Registry, modelFields map[string]yaml.ModelField, modelRelations map[string]yaml.ModelRelation) ([]tsdef.ObjectField, error) {
-	allFields, fieldErr := getDirectTsFieldsForMorpheModel(modelFields)
+	if r == nil {
+		return nil, ErrNoRegistry
+	}
+	allFields, fieldErr := getDirectTsFieldsForMorpheModel(r.GetAllEnums(), modelFields)
 	if fieldErr != nil {
 		return nil, fieldErr
 	}
@@ -27,11 +30,18 @@ func getTsFieldsForMorpheModel(r *registry.Registry, modelFields map[string]yaml
 	return allFields, nil
 }
 
-func getDirectTsFieldsForMorpheModel(modelFields map[string]yaml.ModelField) ([]tsdef.ObjectField, error) {
+func getDirectTsFieldsForMorpheModel(allEnums map[string]yaml.Enum, modelFields map[string]yaml.ModelField) ([]tsdef.ObjectField, error) {
 	allFields := []tsdef.ObjectField{}
 	allFieldNames := core.MapKeysSorted(modelFields)
 	for _, fieldName := range allFieldNames {
 		fieldDef := modelFields[fieldName]
+
+		tsEnumField := getEnumFieldAsTsFieldType(allEnums, fieldName, fieldDef.Type)
+		if tsEnumField.Name != "" && tsEnumField.Type != nil {
+			allFields = append(allFields, tsEnumField)
+			continue
+		}
+
 		tsFieldType, typeSupported := typemap.MorpheFieldToTsField[fieldDef.Type]
 		if !typeSupported {
 			return nil, ErrUnsupportedMorpheFieldType(fieldDef.Type)
@@ -67,6 +77,28 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 		allFields = append(allFields, tsRelatedField)
 	}
 	return allFields, nil
+}
+
+func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, fieldType yaml.ModelFieldType) tsdef.ObjectField {
+	if len(allEnums) == 0 {
+		return tsdef.ObjectField{}
+	}
+
+	enumName := string(fieldType)
+	_, enumTypeExists := allEnums[enumName]
+	if !enumTypeExists {
+		return tsdef.ObjectField{}
+	}
+
+	tsFieldType := tsdef.TsTypeObject{
+		ModulePath: "../enums/" + strcase.ToKebabCaseLower(enumName),
+		Name:       enumName,
+	}
+	tsField := tsdef.ObjectField{
+		Name: fieldName,
+		Type: tsFieldType,
+	}
+	return tsField
 }
 
 func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelName string, relatedModelDef yaml.Model) (tsdef.ObjectField, error) {
