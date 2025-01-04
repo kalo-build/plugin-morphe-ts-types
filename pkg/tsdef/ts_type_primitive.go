@@ -28,6 +28,10 @@ func (t TsTypePrimitive) IsPromise() bool {
 	return false
 }
 
+func (t TsTypePrimitive) IsOptional() bool {
+	return false
+}
+
 func (t TsTypePrimitive) GetSyntax() string {
 	return t.Syntax
 }
@@ -36,4 +40,8 @@ func (t TsTypePrimitive) DeepClone() TsTypePrimitive {
 	return TsTypePrimitive{
 		Syntax: t.Syntax,
 	}
+}
+
+func (t TsTypePrimitive) GetImports() []ObjectImport {
+	return nil
 }

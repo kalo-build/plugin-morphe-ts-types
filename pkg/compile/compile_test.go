@@ -20,8 +20,10 @@ type CompileTestSuite struct {
 	TestDirPath            string
 	TestGroundTruthDirPath string
 
-	ModelsDirPath   string
-	EntitiesDirPath string
+	EnumsDirPath      string
+	ModelsDirPath     string
+	StructuresDirPath string
+	EntitiesDirPath   string
 }
 
 func TestCompileTestSuite(t *testing.T) {
@@ -32,7 +34,9 @@ func (suite *CompileTestSuite) SetupTest() {
 	suite.TestDirPath = testutils.GetTestDirPath()
 	suite.TestGroundTruthDirPath = filepath.Join(suite.TestDirPath, "ground-truth", "compile-minimal")
 
+	suite.EnumsDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "enums")
 	suite.ModelsDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "models")
+	suite.StructuresDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "structures")
 	suite.EntitiesDirPath = filepath.Join(suite.TestDirPath, "registry", "minimal", "entities")
 }
 
@@ -40,25 +44,36 @@ func (suite *CompileTestSuite) TearDownTest() {
 	suite.TestDirPath = ""
 }
 
-func (suite *CompileTestSuite) TestMorpheToTypescriptObjects() {
+func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	workingDirPath := suite.TestDirPath + "/working"
 	suite.Nil(os.Mkdir(workingDirPath, 0644))
 	defer os.RemoveAll(workingDirPath)
 
 	config := compile.MorpheCompileConfig{
 		MorpheLoadRegistryConfig: rcfg.MorpheLoadRegistryConfig{
-			RegistryModelsDirPath:   suite.ModelsDirPath,
-			RegistryEntitiesDirPath: suite.EntitiesDirPath,
+			RegistryEnumsDirPath:      suite.EnumsDirPath,
+			RegistryStructuresDirPath: suite.StructuresDirPath,
+			RegistryModelsDirPath:     suite.ModelsDirPath,
+			RegistryEntitiesDirPath:   suite.EntitiesDirPath,
+		},
+
+		MorpheEnumsConfig: cfg.MorpheEnumsConfig{},
+		EnumWriter: &compile.MorpheEnumFileWriter{
+			TargetDirPath: workingDirPath + "/enums",
 		},
 
 		MorpheModelsConfig: cfg.MorpheModelsConfig{},
-
 		ModelWriter: &compile.MorpheObjectFileWriter{
 			TargetDirPath: workingDirPath + "/models",
 		},
+
+		MorpheStructuresConfig: cfg.MorpheStructuresConfig{},
+		StructureWriter: &compile.MorpheObjectFileWriter{
+			TargetDirPath: workingDirPath + "/structures",
+		},
 	}
 
-	compileErr := compile.MorpheToTypescriptObjects(config)
+	compileErr := compile.MorpheToTypescript(config)
 
 	suite.NoError(compileErr)
 
@@ -75,4 +90,27 @@ func (suite *CompileTestSuite) TestMorpheToTypescriptObjects() {
 	gtModelPath1 := gtModelsDirPath + "/person.d.ts"
 	suite.FileExists(modelPath1)
 	suite.FileEquals(modelPath1, gtModelPath1)
+
+	enumsDirPath := workingDirPath + "/enums"
+	gtEnumsDirPath := suite.TestGroundTruthDirPath + "/enums"
+	suite.DirExists(enumsDirPath)
+
+	enumPath0 := enumsDirPath + "/nationality.d.ts"
+	gtEnumPath0 := gtEnumsDirPath + "/nationality.d.ts"
+	suite.FileExists(enumPath0)
+	suite.FileEquals(enumPath0, gtEnumPath0)
+
+	enumPath1 := enumsDirPath + "/universal-number.d.ts"
+	gtEnumPath1 := gtEnumsDirPath + "/universal-number.d.ts"
+	suite.FileExists(enumPath1)
+	suite.FileEquals(enumPath1, gtEnumPath1)
+
+	structuresDirPath := workingDirPath + "/structures"
+	gtStructuresDirPath := suite.TestGroundTruthDirPath + "/structures"
+	suite.DirExists(structuresDirPath)
+
+	structurePath0 := structuresDirPath + "/address.d.ts"
+	gtStructurePath0 := gtStructuresDirPath + "/address.d.ts"
+	suite.FileExists(structurePath0)
+	suite.FileEquals(structurePath0, gtStructurePath0)
 }

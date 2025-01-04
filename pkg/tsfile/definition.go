@@ -7,16 +7,16 @@ import (
 	"github.com/kaloseia/go-util/strcase"
 )
 
-func WriteAppendTsObjectFile(dirPath string, objectName string, objectFileContents string) ([]byte, error) {
-	objectFileName := strcase.ToKebabCaseLower(objectName)
-	objectFilePath := filepath.Join(dirPath, objectFileName+".d.ts")
+func WriteAppendTsDefinitionFile(dirPath string, definitionName string, definitionFileContents string) ([]byte, error) {
+	definitionFileName := strcase.ToKebabCaseLower(definitionName)
+	definitionFilePath := filepath.Join(dirPath, definitionFileName+".d.ts")
 	if _, readErr := os.ReadDir(dirPath); readErr != nil && os.IsNotExist(readErr) {
 		mkDirErr := os.MkdirAll(dirPath, 0644)
 		if mkDirErr != nil {
 			return nil, mkDirErr
 		}
 	}
-	return []byte(objectFileContents), appendToFile(objectFilePath, objectFileContents)
+	return []byte(definitionFileContents), appendToFile(definitionFilePath, definitionFileContents)
 }
 
 func appendToFile(filePath string, content string) error {

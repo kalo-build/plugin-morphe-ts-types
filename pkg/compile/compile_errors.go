@@ -7,11 +7,12 @@ import (
 	"github.com/kaloseia/morphe-go/pkg/yaml"
 )
 
+var ErrNoRegistry = errors.New("registry not initialized")
 var ErrNoMorpheModelName = errors.New("morphe model has no name")
 var ErrNoMorpheModelFields = errors.New("morphe model has no fields")
 var ErrNoMorpheModelIdentifiers = errors.New("morphe model has no identifiers")
 
-func ErrUnsupportedMorpheFieldType(unsupportedType yaml.ModelFieldType) error {
+func ErrUnsupportedMorpheFieldType[TType yaml.ModelFieldType | yaml.StructureFieldType](unsupportedType TType) error {
 	return fmt.Errorf("unsupported morphe field type for typescript conversion: '%s'", unsupportedType)
 }
 

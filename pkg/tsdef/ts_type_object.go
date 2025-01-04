@@ -1,7 +1,8 @@
 package tsdef
 
 type TsTypeObject struct {
-	Name string
+	ModulePath string
+	Name       string
 }
 
 func (t TsTypeObject) IsPrimitive() bool {
@@ -26,6 +27,23 @@ func (t TsTypeObject) IsInterface() bool {
 
 func (t TsTypeObject) IsPromise() bool {
 	return false
+}
+
+func (t TsTypeObject) IsOptional() bool {
+	return false
+}
+
+func (t TsTypeObject) GetImports() []ObjectImport {
+	if t.ModulePath == "" { // Internals
+		return nil
+	}
+	return []ObjectImport{
+		{
+			ModuleNames:     []string{t.Name},
+			ModulePath:      t.ModulePath,
+			IsDefaultExport: false,
+		},
+	}
 }
 
 func (t TsTypeObject) GetSyntax() string {

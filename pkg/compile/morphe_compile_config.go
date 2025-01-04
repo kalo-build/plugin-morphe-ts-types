@@ -11,11 +11,20 @@ import (
 type MorpheCompileConfig struct {
 	rcfg.MorpheLoadRegistryConfig
 	cfg.MorpheModelsConfig
+	cfg.MorpheEnumsConfig
+	cfg.MorpheStructuresConfig
 
 	RegistryHooks r.LoadMorpheRegistryHooks
+
+	EnumWriter write.TsEnumWriter
+	EnumHooks  hook.CompileMorpheEnum
 
 	ModelWriter write.TsObjectWriter
 	ModelHooks  hook.CompileMorpheModel
 
 	WriteObjectHooks hook.WriteTsObject
+	WriteEnumHooks   hook.WriteTsEnum
+
+	StructureWriter write.TsObjectWriter
+	StructureHooks  hook.CompileMorpheStructure
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/kaloseia/morphe-go/pkg/registry"
 	"github.com/kaloseia/morphe-go/pkg/yaml"
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile"
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/cfg"
@@ -78,7 +79,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects() {
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
 	suite.Len(allTsObjects, 2)
@@ -140,6 +143,536 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects() {
 	suite.Equal(tsField10.Type, tsdef.TsTypeString)
 }
 
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_EnumField() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"AutoIncrement": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Nationality": {
+				Type: "Nationality",
+			},
+			"UUID": {
+				Type: yaml.ModelFieldTypeUUID,
+				Attributes: []string{
+					"immutable",
+				},
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"UUID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{},
+	}
+
+	enum0 := yaml.Enum{
+		Name: "Nationality",
+		Type: yaml.EnumTypeString,
+		Entries: map[string]any{
+			"US": "American",
+			"DE": "German",
+			"FR": "French",
+		},
+	}
+
+	r := registry.NewRegistry()
+	r.SetEnum("Nationality", enum0)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Basic")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 3)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "AutoIncrement")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "Nationality")
+	suite.Equal(tsField01.Type, tsdef.TsTypeObject{
+		ModulePath: "../enums/nationality",
+		Name:       "Nationality",
+	})
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "UUID")
+	suite.Equal(tsField02.Type, tsdef.TsTypeString)
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "UUID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeString)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_EnumField_EnumNotFound() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"AutoIncrement": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Nationality": {
+				Type: "Nationality",
+			},
+			"UUID": {
+				Type: yaml.ModelFieldTypeUUID,
+				Attributes: []string{
+					"immutable",
+				},
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"UUID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{},
+	}
+
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
+
+	suite.NotNil(allTsObjectsErr)
+	suite.ErrorContains(allTsObjectsErr, "unsupported morphe field type for typescript conversion: 'Nationality'")
+
+	suite.Nil(allTsObjects)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"BasicParent": {
+				Type: "ForOne",
+			},
+		},
+	}
+	model1 := yaml.Model{
+		Name: "BasicParent",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r := registry.NewRegistry()
+	r.SetModel("Basic", model0)
+	r.SetModel("BasicParent", model1)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Basic")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "ID")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "String")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "BasicParentID")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeNumber,
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "BasicParent")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./basic-parent",
+			Name:       "BasicParent",
+		},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "ID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForMany() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"BasicParent": {
+				Type: "ForMany",
+			},
+		},
+	}
+	model1 := yaml.Model{
+		Name: "BasicParent",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r := registry.NewRegistry()
+	r.SetModel("Basic", model0)
+	r.SetModel("BasicParent", model1)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Basic")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "ID")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "String")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "BasicParentIDs")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeNumber,
+		},
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "BasicParents")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeObject{
+				ModulePath: "./basic-parent",
+				Name:       "BasicParent",
+			},
+		},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "ID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasOne() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"BasicParent": {
+				Type: "ForOne",
+			},
+		},
+	}
+	model1 := yaml.Model{
+		Name: "BasicParent",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Basic": {
+				Type: "HasOne",
+			},
+		},
+	}
+	r := registry.NewRegistry()
+	r.SetModel("Basic", model0)
+	r.SetModel("BasicParent", model1)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model1)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "BasicParent")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "ID")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "String")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "BasicID")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeNumber,
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "Basic")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./basic",
+			Name:       "Basic",
+		},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicParentIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "ID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasMany() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	model0 := yaml.Model{
+		Name: "Basic",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"BasicParent": {
+				Type: "ForOne",
+			},
+		},
+	}
+	model1 := yaml.Model{
+		Name: "BasicParent",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"String": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{
+					"ID",
+				},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r := registry.NewRegistry()
+	r.SetModel("Basic", model0)
+	r.SetModel("BasicParent", model1)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model1)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "BasicParent")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "ID")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "String")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "BasicIDs")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeNumber,
+		},
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "Basics")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeObject{
+				ModulePath: "./basic",
+				Name:       "Basic",
+			},
+		},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "BasicParentIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "ID")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
 func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoModelName() {
 	modelHooks := hook.CompileMorpheModel{}
 
@@ -162,7 +695,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoModelName() {
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "morphe model has no name")
@@ -188,7 +723,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoFields() {
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "morphe model has no fields")
@@ -212,7 +749,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoIdentifiers() 
 		Related:     map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "morphe model has no identifiers")
@@ -258,7 +797,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_StartHook_Succes
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
 	suite.Len(allTsObjects, 2)
@@ -321,7 +862,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_StartHook_Failur
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "compile model start hook error")
@@ -375,7 +918,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_SuccessHook_Succ
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
 	suite.Len(allTsObjects, 2)
@@ -438,7 +983,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_SuccessHook_Fail
 		Related: map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "compile model success hook error")
@@ -468,7 +1015,9 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_FailureHook_NoMo
 		Related:     map[string]yaml.ModelRelation{},
 	}
 
-	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, model0)
+	r := registry.NewRegistry()
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
 	suite.ErrorContains(allTsObjectsErr, "Model Basic: morphe model has no identifiers")
