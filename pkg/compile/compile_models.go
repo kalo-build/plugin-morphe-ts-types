@@ -26,6 +26,9 @@ func AllMorpheModelsToTsObjects(config MorpheCompileConfig, r *registry.Registry
 }
 
 func MorpheModelToTsObjects(modelHooks hook.CompileMorpheModel, config cfg.MorpheModelsConfig, r *registry.Registry, model yaml.Model) ([]*tsdef.Object, error) {
+	if r == nil {
+		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, ErrNoRegistry)
+	}
 	config, model, compileStartErr := triggerCompileMorpheModelStart(modelHooks, config, model)
 	if compileStartErr != nil {
 		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, compileStartErr)
