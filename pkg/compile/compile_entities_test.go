@@ -33,20 +33,26 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObject() {
 					"immutable",
 				},
 			},
-			"Name": {
-				Type: "User.Name",
+			"AutoIncrement": {
+				Type: "User.Child.AutoIncrement",
 			},
-			"Street": {
-				Type: "User.Address.Street",
+			"Boolean": {
+				Type: "User.Child.Boolean",
 			},
-			"HouseNr": {
-				Type: "User.Address.HouseNr",
+			"Date": {
+				Type: "User.Child.Date",
 			},
-			"ZipCode": {
-				Type: "User.Address.ZipCode",
+			"Float": {
+				Type: "User.Child.Float",
 			},
-			"City": {
-				Type: "User.Address.City",
+			"Integer": {
+				Type: "User.Child.Integer",
+			},
+			"String": {
+				Type: "User.Child.String",
+			},
+			"Time": {
+				Type: "User.Child.Time",
 			},
 		},
 		Related: map[string]yaml.EntityRelation{
@@ -67,9 +73,6 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObject() {
 					"immutable",
 				},
 			},
-			"Name": {
-				Type: yaml.ModelFieldTypeString,
-			},
 		},
 		Identifiers: map[string]yaml.ModelIdentifier{
 			"primary": {
@@ -77,15 +80,15 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObject() {
 			},
 		},
 		Related: map[string]yaml.ModelRelation{
-			"Address": {
+			"Child": {
 				Type: "HasOne",
 			},
 		},
 	}
 	r.SetModel("User", userModel)
 
-	addressModel := yaml.Model{
-		Name: "Address",
+	childModel := yaml.Model{
+		Name: "Child",
 		Fields: map[string]yaml.ModelField{
 			"UUID": {
 				Type: yaml.ModelFieldTypeUUID,
@@ -93,17 +96,26 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObject() {
 					"immutable",
 				},
 			},
-			"Street": {
+			"AutoIncrement": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Boolean": {
+				Type: yaml.ModelFieldTypeBoolean,
+			},
+			"Date": {
+				Type: yaml.ModelFieldTypeDate,
+			},
+			"Float": {
+				Type: yaml.ModelFieldTypeFloat,
+			},
+			"Integer": {
+				Type: yaml.ModelFieldTypeInteger,
+			},
+			"String": {
 				Type: yaml.ModelFieldTypeString,
 			},
-			"HouseNr": {
-				Type: yaml.ModelFieldTypeString,
-			},
-			"ZipCode": {
-				Type: yaml.ModelFieldTypeString,
-			},
-			"City": {
-				Type: yaml.ModelFieldTypeString,
+			"Time": {
+				Type: yaml.ModelFieldTypeTime,
 			},
 		},
 		Identifiers: map[string]yaml.ModelIdentifier{
@@ -117,7 +129,7 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObject() {
 			},
 		},
 	}
-	r.SetModel("Address", addressModel)
+	r.SetModel("Child", childModel)
 
 	tsObject, tsObjectErr := compile.MorpheEntityToTsObject(entityHooks, entitiesConfig, r, entity0)
 
@@ -127,29 +139,37 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObject() {
 	suite.Equal(tsObject.Name, "User")
 
 	tsFields := tsObject.Fields
-	suite.Len(tsFields, 6)
+	suite.Len(tsFields, 8)
 
 	tsField0 := tsFields[0]
-	suite.Equal(tsField0.Name, "City")
-	suite.Equal(tsField0.Type, tsdef.TsTypeString)
+	suite.Equal(tsField0.Name, "AutoIncrement")
+	suite.Equal(tsField0.Type, tsdef.TsTypeNumber)
 
 	tsField1 := tsFields[1]
-	suite.Equal(tsField1.Name, "HouseNr")
-	suite.Equal(tsField1.Type, tsdef.TsTypeString)
+	suite.Equal(tsField1.Name, "Boolean")
+	suite.Equal(tsField1.Type, tsdef.TsTypeBoolean)
 
 	tsField2 := tsFields[2]
-	suite.Equal(tsField2.Name, "Name")
-	suite.Equal(tsField2.Type, tsdef.TsTypeString)
+	suite.Equal(tsField2.Name, "Date")
+	suite.Equal(tsField2.Type, tsdef.TsTypeDate)
 
 	tsField3 := tsFields[3]
-	suite.Equal(tsField3.Name, "Street")
-	suite.Equal(tsField3.Type, tsdef.TsTypeString)
+	suite.Equal(tsField3.Name, "Float")
+	suite.Equal(tsField3.Type, tsdef.TsTypeNumber)
 
 	tsField4 := tsFields[4]
-	suite.Equal(tsField4.Name, "UUID")
-	suite.Equal(tsField4.Type, tsdef.TsTypeString)
+	suite.Equal(tsField4.Name, "Integer")
+	suite.Equal(tsField4.Type, tsdef.TsTypeNumber)
 
 	tsField5 := tsFields[5]
-	suite.Equal(tsField5.Name, "ZipCode")
+	suite.Equal(tsField5.Name, "String")
 	suite.Equal(tsField5.Type, tsdef.TsTypeString)
+
+	tsField6 := tsFields[6]
+	suite.Equal(tsField6.Name, "Time")
+	suite.Equal(tsField6.Type, tsdef.TsTypeDate)
+
+	tsField7 := tsFields[7]
+	suite.Equal(tsField7.Name, "UUID")
+	suite.Equal(tsField7.Type, tsdef.TsTypeString)
 }
