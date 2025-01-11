@@ -31,34 +31,100 @@ This plugin generates TypeScript type definitions (.d.ts files) from Morphe spec
 Given a Morphe model:
 
 ``` yaml
-name: Company
+name: Person
 fields:
   ID:
     type: AutoIncrement
-  Name:
+    attributes:
+      - mandatory
+  FirstName:
     type: String
+  LastName:
+    type: String
+  Nationality:
+    type: Nationality
+identifiers:
+  primary: ID
+  name:
+    - FirstName
+    - LastName
 related:
-  Employees:
-    type: HasMany
-    model: Person
+  ContactInfo:
+    type: HasOne
+  Company:
+    type: ForOne
 ```
 
 The plugin generates:
 
 ``` typescript
-export interface Company {
-  ID: number;
-  Name: string;
-  EmployeeIDs?: number[];
-  Employees?: Person[];
+import { Nationality } from "../enums/nationality"
+import { Company } from "./company"
+import { ContactInfo } from "./contact-info"
+
+export type Person = {
+	firstName: string
+	id: number
+	lastName: string
+	nationality: Nationality
+	companyID?: number
+	company?: Company
+	contactInfoID?: number
+	contactInfo?: ContactInfo
+}
+
+export type PersonIDName = {
+	firstName: string
+	lastName: string
+}
+
+export type PersonIDPrimary = {
+	id: number
 }
 ```
 
-## Configuration
+See [testdata](https://github.com/kaloseia/plugin-morphe-ts-types/tree/main/testdata) for more examples.
 
-Reference implementation from compile_test.go:
-startLine: 71
-endLine: 78
+## Configuration / Usage
+
+First define your Morphe registry for all your enums, structures, models and entities.
+
+Then install the plugin and add your paths to the plugin configuration.
+
+Example usage:
+
+``` go
+config := compile.MorpheCompileConfig{
+    MorpheLoadRegistryConfig: rcfg.MorpheLoadRegistryConfig{
+        RegistryEnumsDirPath:      "path/to/enums",
+        RegistryStructuresDirPath: "path/to/structures",
+        RegistryModelsDirPath:     "path/to/models",
+        RegistryEntitiesDirPath:   "path/to/entities",
+    },
+
+    MorpheEnumsConfig: cfg.MorpheEnumsConfig{},
+    EnumWriter: &compile.MorpheEnumFileWriter{
+        TargetDirPath: "path/to/enums",
+    },
+
+    MorpheModelsConfig: cfg.MorpheModelsConfig{},
+    ModelWriter: &compile.MorpheObjectFileWriter{
+        TargetDirPath: "path/to/models",
+    },
+
+    MorpheEntitiesConfig: cfg.MorpheEntitiesConfig{},
+    EntityWriter: &compile.MorpheObjectFileWriter{
+        TargetDirPath: "path/to/entities",
+    },
+
+    MorpheStructuresConfig: cfg.MorpheStructuresConfig{},
+    StructureWriter: &compile.MorpheObjectFileWriter{
+        TargetDirPath: "path/to/structures",
+    },
+}
+
+compileErr := compile.MorpheToTypescript(config)
+```
 
 ## Development
 
