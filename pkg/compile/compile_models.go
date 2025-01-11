@@ -133,12 +133,12 @@ func getAllModelIdentifierObjectTypes(model yaml.Model, modelType *tsdef.Object)
 	for _, identifierName := range allIdentifierNames {
 		identifierDef := modelIdentifiers[identifierName]
 
-		allIdentFieldDefs, identFieldDefsErr := getIdentifierObjectFieldSubset(*modelType, identifierName, identifierDef)
+		allIdentFieldDefs, identFieldDefsErr := getModelIdentifierObjectFieldSubset(*modelType, identifierName, identifierDef)
 		if identFieldDefsErr != nil {
 			return nil, identFieldDefsErr
 		}
 
-		identObject, identObjectErr := getIdentifierObjectType(modelType.Name, identifierName, allIdentFieldDefs)
+		identObject, identObjectErr := getModelIdentifierObjectType(modelType.Name, identifierName, allIdentFieldDefs)
 		if identObjectErr != nil {
 			return nil, identObjectErr
 		}
@@ -147,7 +147,7 @@ func getAllModelIdentifierObjectTypes(model yaml.Model, modelType *tsdef.Object)
 	return allIdentTypes, nil
 }
 
-func getIdentifierObjectType(modelName string, identifierName string, allIdentFieldDefs []tsdef.ObjectField) (*tsdef.Object, error) {
+func getModelIdentifierObjectType(modelName string, identifierName string, allIdentFieldDefs []tsdef.ObjectField) (*tsdef.Object, error) {
 	identifierType := tsdef.Object{
 		Name:   fmt.Sprintf("%sID%s", modelName, strcase.ToPascalCase(identifierName)),
 		Fields: allIdentFieldDefs,
@@ -155,7 +155,7 @@ func getIdentifierObjectType(modelName string, identifierName string, allIdentFi
 	return &identifierType, nil
 }
 
-func getIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName string, identifier yaml.ModelIdentifier) ([]tsdef.ObjectField, error) {
+func getModelIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName string, identifier yaml.ModelIdentifier) ([]tsdef.ObjectField, error) {
 	identifierFieldDefs := []tsdef.ObjectField{}
 	for _, fieldName := range identifier.Fields {
 		identifierFieldDef := tsdef.ObjectField{}

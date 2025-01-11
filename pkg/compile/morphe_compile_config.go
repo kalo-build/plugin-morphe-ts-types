@@ -13,6 +13,7 @@ type MorpheCompileConfig struct {
 	cfg.MorpheModelsConfig
 	cfg.MorpheEnumsConfig
 	cfg.MorpheStructuresConfig
+	cfg.MorpheEntitiesConfig
 
 	RegistryHooks r.LoadMorpheRegistryHooks
 
@@ -21,6 +22,9 @@ type MorpheCompileConfig struct {
 
 	ModelWriter write.TsObjectWriter
 	ModelHooks  hook.CompileMorpheModel
+
+	EntityWriter write.TsObjectWriter
+	EntityHooks  hook.CompileMorpheEntity
 
 	WriteObjectHooks hook.WriteTsObject
 	WriteEnumHooks   hook.WriteTsEnum

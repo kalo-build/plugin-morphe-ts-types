@@ -18,3 +18,5 @@ identifiers:
 related:
   ContactInfo:
     type: HasOne
+  Company:
+    type: ForOne

@@ -1,15 +1,18 @@
 name: Person
 fields:
-  UUID:
-    type: Person.UUID
+  ID:
+    type: Person.ID
     attributes:
       - immutable
       - mandatory
-  ID:
-    type: Person.ID
-  FirstName:
-    type: Person.FirstName
   LastName:
     type: Person.LastName
+  Nationality:
+    type: Person.Nationality
   Email:
     type: Person.ContactInfo.Email
+identifiers:
+  primary: ID
+related:
+  Company:
+    type: ForOne
