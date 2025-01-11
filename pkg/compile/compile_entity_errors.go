@@ -1,8 +1,12 @@
 package compile
 
 import (
+	"errors"
 	"fmt"
 )
+
+var ErrNoEntityObjects = errors.New("no entity objects provided")
+var ErrNoEntityObject = errors.New("no entity object provided")
 
 var ErrInvalidEntityFieldPath = func(fieldType string) error {
 	return fmt.Errorf("invalid entity field type path: %s", fieldType)

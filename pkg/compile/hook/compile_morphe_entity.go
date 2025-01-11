@@ -13,5 +13,5 @@ type CompileMorpheEntity struct {
 }
 
 type OnCompileMorpheEntityStartHook = func(config cfg.MorpheEntitiesConfig, entity yaml.Entity) (cfg.MorpheEntitiesConfig, yaml.Entity, error)
-type OnCompileMorpheEntitySuccessHook = func(entityType *tsdef.Object) (*tsdef.Object, error)
+type OnCompileMorpheEntitySuccessHook = func(entityObjects []*tsdef.Object) ([]*tsdef.Object, error)
 type OnCompileMorpheEntityFailureHook = func(config cfg.MorpheEntitiesConfig, entity yaml.Entity, compileFailure error) error

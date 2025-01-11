@@ -67,6 +67,11 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 			TargetDirPath: workingDirPath + "/models",
 		},
 
+		MorpheEntitiesConfig: cfg.MorpheEntitiesConfig{},
+		EntityWriter: &compile.MorpheObjectFileWriter{
+			TargetDirPath: workingDirPath + "/entities",
+		},
+
 		MorpheStructuresConfig: cfg.MorpheStructuresConfig{},
 		StructureWriter: &compile.MorpheObjectFileWriter{
 			TargetDirPath: workingDirPath + "/structures",
@@ -91,6 +96,11 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	suite.FileExists(modelPath1)
 	suite.FileEquals(modelPath1, gtModelPath1)
 
+	modelPath2 := modelsDirPath + "/company.d.ts"
+	gtModelPath2 := gtModelsDirPath + "/company.d.ts"
+	suite.FileExists(modelPath2)
+	suite.FileEquals(modelPath2, gtModelPath2)
+
 	enumsDirPath := workingDirPath + "/enums"
 	gtEnumsDirPath := suite.TestGroundTruthDirPath + "/enums"
 	suite.DirExists(enumsDirPath)
@@ -113,4 +123,18 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	gtStructurePath0 := gtStructuresDirPath + "/address.d.ts"
 	suite.FileExists(structurePath0)
 	suite.FileEquals(structurePath0, gtStructurePath0)
+
+	entitiesDirPath := workingDirPath + "/entities"
+	gtEntitiesDirPath := suite.TestGroundTruthDirPath + "/entities"
+	suite.DirExists(entitiesDirPath)
+
+	entityPath0 := entitiesDirPath + "/company.d.ts"
+	gtEntityPath0 := gtEntitiesDirPath + "/company.d.ts"
+	suite.FileExists(entityPath0)
+	suite.FileEquals(entityPath0, gtEntityPath0)
+
+	entityPath1 := entitiesDirPath + "/person.d.ts"
+	gtEntityPath1 := gtEntitiesDirPath + "/person.d.ts"
+	suite.FileExists(entityPath1)
+	suite.FileEquals(entityPath1, gtEntityPath1)
 }

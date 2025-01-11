@@ -38,5 +38,15 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 		return writeAllStructuresErr
 	}
 
+	allEntityObjectDefs, compileAllEntitiesErr := AllMorpheEntitiesToTsObjects(config, r)
+	if compileAllEntitiesErr != nil {
+		return compileAllEntitiesErr
+	}
+
+	_, writeAllEntitiesErr := WriteAllEntityObjectDefinitions(config, allEntityObjectDefs)
+	if writeAllEntitiesErr != nil {
+		return writeAllEntitiesErr
+	}
+
 	return nil
 }

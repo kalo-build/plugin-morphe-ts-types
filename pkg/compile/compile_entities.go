@@ -1,19 +1,31 @@
 package compile
 
 import (
-	"strings"
+	"fmt"
 
 	"github.com/kaloseia/go-util/core"
+	"github.com/kaloseia/go-util/strcase"
 	"github.com/kaloseia/morphe-go/pkg/registry"
 	"github.com/kaloseia/morphe-go/pkg/yaml"
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/cfg"
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/hook"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/typemap"
 
 	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
 )
 
-func MorpheEntityToTsObject(entityHooks hook.CompileMorpheEntity, config cfg.MorpheEntitiesConfig, r *registry.Registry, entity yaml.Entity) (*tsdef.Object, error) {
+func AllMorpheEntitiesToTsObjects(config MorpheCompileConfig, r *registry.Registry) (map[string][]*tsdef.Object, error) {
+	allEntityTypeDefs := map[string][]*tsdef.Object{}
+	for entityName, entity := range r.GetAllEntities() {
+		entityTypes, entityTypesErr := MorpheEntityToTsObjects(config.EntityHooks, config.MorpheEntitiesConfig, r, entity)
+		if entityTypesErr != nil {
+			return nil, entityTypesErr
+		}
+		allEntityTypeDefs[entityName] = entityTypes
+	}
+	return allEntityTypeDefs, nil
+}
+
+func MorpheEntityToTsObjects(entityHooks hook.CompileMorpheEntity, config cfg.MorpheEntitiesConfig, r *registry.Registry, entity yaml.Entity) ([]*tsdef.Object, error) {
 	if r == nil {
 		return nil, triggerCompileMorpheEntityFailure(entityHooks, config, entity, ErrNoRegistry)
 	}
@@ -23,35 +35,66 @@ func MorpheEntityToTsObject(entityHooks hook.CompileMorpheEntity, config cfg.Mor
 		return nil, triggerCompileMorpheEntityFailure(entityHooks, config, entity, compileStartErr)
 	}
 
-	entityObject, objectErr := morpheEntityToTsObjectType(config, r, entity)
-	if objectErr != nil {
-		return nil, triggerCompileMorpheEntityFailure(entityHooks, config, entity, objectErr)
+	allEntityTypes, objectsErr := morpheEntityToTsObjectTypes(config, r, entity)
+	if objectsErr != nil {
+		return nil, triggerCompileMorpheEntityFailure(entityHooks, config, entity, objectsErr)
 	}
 
-	entityObject, compileSuccessErr := triggerCompileMorpheEntitySuccess(entityHooks, entityObject)
+	allEntityTypes, compileSuccessErr := triggerCompileMorpheEntitySuccess(entityHooks, allEntityTypes)
 	if compileSuccessErr != nil {
 		return nil, triggerCompileMorpheEntityFailure(entityHooks, config, entity, compileSuccessErr)
 	}
 
-	return entityObject, nil
+	return allEntityTypes, nil
 }
 
-func morpheEntityToTsObjectType(config cfg.MorpheEntitiesConfig, r *registry.Registry, entity yaml.Entity) (*tsdef.Object, error) {
+func morpheEntityToTsObjectTypes(config cfg.MorpheEntitiesConfig, r *registry.Registry, entity yaml.Entity) ([]*tsdef.Object, error) {
 	validateConfigErr := config.Validate()
 	if validateConfigErr != nil {
 		return nil, validateConfigErr
 	}
-	// validateMorpheErr := entity.Validate()
-	// if validateMorpheErr != nil {
-	// 	return nil, validateMorpheErr
-	// }
+	validateMorpheErr := entity.Validate(r.GetAllModels(), r.GetAllEnums())
+	if validateMorpheErr != nil {
+		return nil, validateMorpheErr
+	}
 
 	entityType, entityTypeErr := getEntityObjectType(r, entity)
 	if entityTypeErr != nil {
 		return nil, entityTypeErr
 	}
 
-	return entityType, nil
+	allIdentifierTypes, identifierTypesErr := getAllEntityIdentifierObjectTypes(entity, entityType)
+	if identifierTypesErr != nil {
+		return nil, identifierTypesErr
+	}
+
+	allEntityTypes := []*tsdef.Object{
+		entityType,
+	}
+	allEntityTypes = append(allEntityTypes, allIdentifierTypes...)
+	return allEntityTypes, nil
+}
+
+func getAllEntityIdentifierObjectTypes(entity yaml.Entity, entityType *tsdef.Object) ([]*tsdef.Object, error) {
+	entityIdentifiers := entity.Identifiers
+	allIdentifierNames := core.MapKeysSorted(entityIdentifiers)
+	allIdentTypes := []*tsdef.Object{}
+
+	for _, identifierName := range allIdentifierNames {
+		identifierDef := entityIdentifiers[identifierName]
+
+		allIdentFieldDefs, identFieldDefsErr := getEntityIdentifierObjectFieldSubset(*entityType, identifierName, identifierDef)
+		if identFieldDefsErr != nil {
+			return nil, identFieldDefsErr
+		}
+
+		identObject, identObjectErr := getEntityIdentifierObjectType(entityType.Name, identifierName, allIdentFieldDefs)
+		if identObjectErr != nil {
+			return nil, identObjectErr
+		}
+		allIdentTypes = append(allIdentTypes, identObject)
+	}
+	return allIdentTypes, nil
 }
 
 func getEntityObjectType(r *registry.Registry, entity yaml.Entity) (*tsdef.Object, error) {
@@ -59,7 +102,7 @@ func getEntityObjectType(r *registry.Registry, entity yaml.Entity) (*tsdef.Objec
 		Name: entity.Name,
 	}
 
-	typeFields, fieldsErr := getTsFieldsForMorpheEntity(r, entity.Fields)
+	typeFields, fieldsErr := getTsFieldsForMorpheEntity(r, entity.Fields, entity.Related)
 	if fieldsErr != nil {
 		return nil, fieldsErr
 	}
@@ -74,64 +117,33 @@ func getEntityObjectType(r *registry.Registry, entity yaml.Entity) (*tsdef.Objec
 	return &entityType, nil
 }
 
-func getTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]yaml.EntityField) ([]tsdef.ObjectField, error) {
-	allFieldNames := core.MapKeysSorted(entityFields)
-	allTypeFields := make([]tsdef.ObjectField, 0, len(entityFields))
-
-	for _, fieldName := range allFieldNames {
-		fieldDef := entityFields[fieldName]
-		tsType, typeErr := getTsTypeForEntityField(r, fieldDef)
-		if typeErr != nil {
-			return nil, typeErr
-		}
-
-		typeField := tsdef.ObjectField{
-			Name: fieldName,
-			Type: tsType,
-		}
-		allTypeFields = append(allTypeFields, typeField)
+func getEntityIdentifierObjectType(entityName string, identifierName string, allIdentFieldDefs []tsdef.ObjectField) (*tsdef.Object, error) {
+	identifierType := tsdef.Object{
+		Name:   fmt.Sprintf("%sID%s", entityName, strcase.ToPascalCase(identifierName)),
+		Fields: allIdentFieldDefs,
 	}
-
-	return allTypeFields, nil
+	return &identifierType, nil
 }
 
-func getTsTypeForEntityField(r *registry.Registry, field yaml.EntityField) (tsdef.TsType, error) {
-	fieldPath := strings.Split(string(field.Type), ".")
-	if len(fieldPath) < 2 {
-		return nil, ErrInvalidEntityFieldPath(string(field.Type))
-	}
-
-	rootModelName := fieldPath[0]
-	currentModel, modelErr := r.GetModel(rootModelName)
-	if modelErr != nil {
-		return nil, ErrRootModelNotFound(rootModelName)
-	}
-
-	for segmentIdx := 1; segmentIdx < len(fieldPath)-1; segmentIdx++ {
-		relatedName := fieldPath[segmentIdx]
-		_, exists := currentModel.Related[relatedName]
-		if !exists {
-			return nil, ErrRelatedModelNotFound(relatedName, string(field.Type))
+func getEntityIdentifierObjectFieldSubset(entityType tsdef.Object, identifierName string, identifier yaml.EntityIdentifier) ([]tsdef.ObjectField, error) {
+	identifierFieldDefs := []tsdef.ObjectField{}
+	for _, fieldName := range identifier.Fields {
+		identifierFieldDef := tsdef.ObjectField{}
+		for _, entityFieldDef := range entityType.Fields {
+			if entityFieldDef.Name != fieldName {
+				continue
+			}
+			identifierFieldDef = tsdef.ObjectField{
+				Name: entityFieldDef.Name,
+				Type: entityFieldDef.Type,
+			}
 		}
-
-		relatedModel, relatedErr := r.GetModel(relatedName)
-		if relatedErr != nil {
-			return nil, ErrFailedToGetRelatedModel(relatedName, string(field.Type))
+		if identifierFieldDef.Name == "" {
+			return nil, ErrMissingMorpheIdentifierField(entityType.Name, identifierName, fieldName)
 		}
-		currentModel = relatedModel
+		identifierFieldDefs = append(identifierFieldDefs, identifierFieldDef)
 	}
-
-	terminalFieldName := fieldPath[len(fieldPath)-1]
-	terminalField, exists := currentModel.Fields[terminalFieldName]
-	if !exists {
-		return nil, ErrTerminalFieldNotFound(terminalFieldName, string(field.Type))
-	}
-
-	tsFieldType, typeSupported := typemap.MorpheModelFieldToTsField[terminalField.Type]
-	if !typeSupported {
-		return nil, ErrUnsupportedMorpheFieldType(terminalField.Type)
-	}
-	return tsFieldType, nil
+	return identifierFieldDefs, nil
 }
 
 func triggerCompileMorpheEntityStart(hooks hook.CompileMorpheEntity, config cfg.MorpheEntitiesConfig, entity yaml.Entity) (cfg.MorpheEntitiesConfig, yaml.Entity, error) {
@@ -142,12 +154,12 @@ func triggerCompileMorpheEntityStart(hooks hook.CompileMorpheEntity, config cfg.
 	return hooks.OnCompileMorpheEntityStart(config, entity)
 }
 
-func triggerCompileMorpheEntitySuccess(hooks hook.CompileMorpheEntity, entityObject *tsdef.Object) (*tsdef.Object, error) {
+func triggerCompileMorpheEntitySuccess(hooks hook.CompileMorpheEntity, entityObjects []*tsdef.Object) ([]*tsdef.Object, error) {
 	if hooks.OnCompileMorpheEntitySuccess == nil {
-		return entityObject, nil
+		return entityObjects, nil
 	}
 
-	return hooks.OnCompileMorpheEntitySuccess(entityObject)
+	return hooks.OnCompileMorpheEntitySuccess(entityObjects)
 }
 
 func triggerCompileMorpheEntityFailure(hooks hook.CompileMorpheEntity, config cfg.MorpheEntitiesConfig, entity yaml.Entity, failureErr error) error {
