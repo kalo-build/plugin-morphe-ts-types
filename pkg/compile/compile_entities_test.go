@@ -133,6 +133,29 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects() {
 	}
 	r.SetModel("Child", childModel)
 
+	entity1 := yaml.Entity{
+		Name: "BasicParent",
+		Fields: map[string]yaml.EntityField{
+			"ID": {
+				Type: "BasicParent.ID",
+			},
+			"String": {
+				Type: "BasicParent.String",
+			},
+		},
+		Identifiers: map[string]yaml.EntityIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.EntityRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r.SetEntity("BasicParent", entity1)
+
 	allTsObjects, tsObjectErr := compile.MorpheEntityToTsObjects(entityHooks, entitiesConfig, r, entity0)
 
 	suite.Nil(tsObjectErr)
@@ -518,6 +541,29 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForOn
 	}
 	r.SetModel("BasicParent", model1)
 
+	entity1 := yaml.Entity{
+		Name: "BasicParent",
+		Fields: map[string]yaml.EntityField{
+			"ID": {
+				Type: "BasicParent.ID",
+			},
+			"String": {
+				Type: "BasicParent.String",
+			},
+		},
+		Identifiers: map[string]yaml.EntityIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.EntityRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r.SetEntity("BasicParent", entity1)
+
 	allTsObjects, tsObjectErr := compile.MorpheEntityToTsObjects(entityHooks, entitiesConfig, r, entity0)
 
 	suite.Nil(tsObjectErr)
@@ -636,6 +682,29 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForMa
 		},
 	}
 	r.SetModel("BasicParent", model1)
+
+	entity1 := yaml.Entity{
+		Name: "BasicParent",
+		Fields: map[string]yaml.EntityField{
+			"ID": {
+				Type: "BasicParent.ID",
+			},
+			"String": {
+				Type: "BasicParent.String",
+			},
+		},
+		Identifiers: map[string]yaml.EntityIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.EntityRelation{
+			"Basic": {
+				Type: "HasMany",
+			},
+		},
+	}
+	r.SetEntity("BasicParent", entity1)
 
 	allTsObjects, tsObjectErr := compile.MorpheEntityToTsObjects(entityHooks, entitiesConfig, r, entity0)
 
@@ -760,6 +829,29 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasOn
 	}
 	r.SetModel("BasicParent", model1)
 
+	entity1 := yaml.Entity{
+		Name: "Basic",
+		Fields: map[string]yaml.EntityField{
+			"ID": {
+				Type: "Basic.ID",
+			},
+			"String": {
+				Type: "Basic.String",
+			},
+		},
+		Identifiers: map[string]yaml.EntityIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.EntityRelation{
+			"BasicParent": {
+				Type: "ForOne",
+			},
+		},
+	}
+	r.SetEntity("Basic", entity1)
+
 	allTsObjects, tsObjectErr := compile.MorpheEntityToTsObjects(entityHooks, entitiesConfig, r, entity0)
 
 	suite.Nil(tsObjectErr)
@@ -878,6 +970,29 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasMa
 		},
 	}
 	r.SetModel("BasicParent", model1)
+
+	entity1 := yaml.Entity{
+		Name: "Basic",
+		Fields: map[string]yaml.EntityField{
+			"ID": {
+				Type: "Basic.ID",
+			},
+			"String": {
+				Type: "Basic.String",
+			},
+		},
+		Identifiers: map[string]yaml.EntityIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.EntityRelation{
+			"Basic": {
+				Type: "ForOne",
+			},
+		},
+	}
+	r.SetEntity("Basic", entity1)
 
 	allTsObjects, tsObjectErr := compile.MorpheEntityToTsObjects(entityHooks, entitiesConfig, r, entity0)
 

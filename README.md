@@ -1,6 +1,6 @@
 # plugin-morphe-ts-types
 
-A TypeScript type definition generator plugin for [Morphe specifications](https://github.com/kaloseia/morphe).
+A TypeScript type definition generator plugin for [Morphe specifications](https://github.com/kaloseia/morphe-spec).
 
 ## Overview
 

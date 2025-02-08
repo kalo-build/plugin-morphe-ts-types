@@ -12,7 +12,7 @@ var ErrNoMorpheModelName = errors.New("morphe model has no name")
 var ErrNoMorpheModelFields = errors.New("morphe model has no fields")
 var ErrNoMorpheModelIdentifiers = errors.New("morphe model has no identifiers")
 
-func ErrUnsupportedMorpheFieldType[TType yaml.ModelFieldType | yaml.StructureFieldType](unsupportedType TType) error {
+func ErrUnsupportedMorpheFieldType[TType yaml.ModelFieldType | yaml.StructureFieldType | yaml.ModelFieldPath](unsupportedType TType) error {
 	return fmt.Errorf("unsupported morphe field type for typescript conversion: '%s'", unsupportedType)
 }
 
