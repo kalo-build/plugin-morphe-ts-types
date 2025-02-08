@@ -12,5 +12,5 @@ type WriteTsEnum struct {
 }
 
 type OnWriteTsEnumStartHook = func(writer write.TsEnumWriter, enumType *tsdef.Enum) (write.TsEnumWriter, *tsdef.Enum, error)
-type OnWriteTsEnumSuccessHook = func(enumType *tsdef.Enum, modelStructContents []byte) (*tsdef.Enum, []byte, error)
+type OnWriteTsEnumSuccessHook = func(enumType *tsdef.Enum, enumContents []byte) (*tsdef.Enum, []byte, error)
 type OnWriteTsEnumFailureHook = func(writer write.TsEnumWriter, enumType *tsdef.Enum, failureErr error) error
