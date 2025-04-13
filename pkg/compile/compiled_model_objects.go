@@ -1,6 +1,6 @@
 package compile
 
-import "github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
+import "github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 
 // CompiledModelObjects maps Model.Name -> ModelObject.Name -> CompiledObject
 type CompiledModelObjects map[string]map[string]CompiledObject

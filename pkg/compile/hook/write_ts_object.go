@@ -1,8 +1,8 @@
 package hook
 
 import (
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/write"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/write"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 type WriteTsObject struct {

@@ -3,13 +3,13 @@ package compile
 import (
 	"fmt"
 
-	"github.com/kaloseia/go-util/core"
-	"github.com/kaloseia/go-util/strcase"
-	"github.com/kaloseia/morphe-go/pkg/registry"
-	"github.com/kaloseia/morphe-go/pkg/yaml"
-	"github.com/kaloseia/morphe-go/pkg/yamlops"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/typemap"
+	"github.com/kalo/go-util/core"
+	"github.com/kalo/go-util/strcase"
+	"github.com/kalo/morphe-go/pkg/registry"
+	"github.com/kalo/morphe-go/pkg/yaml"
+	"github.com/kalo/morphe-go/pkg/yamlops"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/typemap"
 )
 
 func getTsFieldsForMorpheModel(r *registry.Registry, modelFields map[string]yaml.ModelField, modelRelations map[string]yaml.ModelRelation) ([]tsdef.ObjectField, error) {

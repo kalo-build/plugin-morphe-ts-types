@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kaloseia/go-util/strcase"
+	"github.com/kalo-build/go-util/strcase"
 )
 
 func WriteAppendTsDefinitionFile(dirPath string, definitionName string, definitionFileContents string) ([]byte, error) {

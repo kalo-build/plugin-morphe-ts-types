@@ -1,11 +1,11 @@
 package compile
 
 import (
-	"github.com/kaloseia/morphe-go/pkg/registry"
-	"github.com/kaloseia/morphe-go/pkg/yaml"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/cfg"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/hook"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo/morphe-go/pkg/registry"
+	"github.com/kalo/morphe-go/pkg/yaml"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/cfg"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/hook"
+	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 func AllMorpheStructuresToTsObjects(config MorpheCompileConfig, r *registry.Registry) (map[string]*tsdef.Object, error) {
