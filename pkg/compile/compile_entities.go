@@ -3,14 +3,14 @@ package compile
 import (
 	"fmt"
 
-	"github.com/kalo/go-util/core"
-	"github.com/kalo/go-util/strcase"
-	"github.com/kalo/morphe-go/pkg/registry"
-	"github.com/kalo/morphe-go/pkg/yaml"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/cfg"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/hook"
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/go-util/strcase"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/hook"
 
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 func AllMorpheEntitiesToTsObjects(config MorpheCompileConfig, r *registry.Registry) (map[string][]*tsdef.Object, error) {

@@ -1,12 +1,12 @@
 package compile
 
 import (
-	"github.com/kalo/go-util/core"
-	"github.com/kalo/morphe-go/pkg/registry"
-	"github.com/kalo/morphe-go/pkg/yaml"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/cfg"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/hook"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/hook"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 func AllMorpheEnumsToTsEnums(config MorpheCompileConfig, r *registry.Registry) (map[string]*tsdef.Enum, error) {

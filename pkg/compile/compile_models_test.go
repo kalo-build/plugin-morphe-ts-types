@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kalo/morphe-go/pkg/registry"
-	"github.com/kalo/morphe-go/pkg/yaml"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/cfg"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/hook"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/hook"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -1023,4 +1023,3 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_FailureHook_NoMo
 	suite.ErrorContains(allTsObjectsErr, "Model Basic: morphe model has no identifiers")
 	suite.Nil(allTsObjects)
 }
-

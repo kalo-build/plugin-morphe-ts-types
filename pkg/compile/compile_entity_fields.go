@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kalo/go-util/core"
-	"github.com/kalo/go-util/strcase"
-	"github.com/kalo/morphe-go/pkg/registry"
-	"github.com/kalo/morphe-go/pkg/yaml"
-	"github.com/kalo/morphe-go/pkg/yamlops"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/typemap"
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/go-util/strcase"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/morphe-go/pkg/yamlops"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/typemap"
 )
 
 func getTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]yaml.EntityField, entityRelations map[string]yaml.EntityRelation) ([]tsdef.ObjectField, error) {

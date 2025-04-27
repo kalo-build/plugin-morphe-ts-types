@@ -1,11 +1,11 @@
 package compile
 
 import (
-	"github.com/kalo/clone"
-	"github.com/kalo/go-util/core"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/hook"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/write"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/clone"
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/hook"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/write"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 func WriteAllEntityObjectDefinitions(config MorpheCompileConfig, allEntityObjectDefs map[string][]*tsdef.Object) (CompiledEntityObjects, error) {

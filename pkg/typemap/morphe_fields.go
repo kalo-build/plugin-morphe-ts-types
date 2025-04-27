@@ -1,9 +1,9 @@
 package typemap
 
 import (
-	"github.com/kalo/morphe-go/pkg/yaml"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
 
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 var MorpheModelFieldToTsField = map[yaml.ModelFieldType]tsdef.TsType{

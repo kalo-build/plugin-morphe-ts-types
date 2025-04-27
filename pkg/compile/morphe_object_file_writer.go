@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/kalo/go-util/core"
-	"github.com/kalo/go-util/strcase"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsfile"
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/go-util/strcase"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsfile"
 )
 
 type MorpheObjectFileWriter struct {

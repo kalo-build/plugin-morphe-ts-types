@@ -1,9 +1,9 @@
 package hook
 
 import (
-	"github.com/kalo/morphe-go/pkg/yaml"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/compile/cfg"
-	"github.com/kalo/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 )
 
 type CompileMorpheEnum struct {
