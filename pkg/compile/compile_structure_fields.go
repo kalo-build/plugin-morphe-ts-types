@@ -1,12 +1,12 @@
 package compile
 
 import (
-	"github.com/kaloseia/go-util/core"
+	"github.com/kalo-build/go-util/core"
 
-	"github.com/kaloseia/morphe-go/pkg/registry"
-	"github.com/kaloseia/morphe-go/pkg/yaml"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/typemap"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/typemap"
 )
 
 func getTsFieldsForMorpheStructure(r *registry.Registry, structureFields map[string]yaml.StructureField) ([]tsdef.ObjectField, error) {

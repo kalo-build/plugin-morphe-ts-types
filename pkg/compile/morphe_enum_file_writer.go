@@ -4,10 +4,10 @@ import (
 	"fmt"
 	ti "time"
 
-	"github.com/kaloseia/go-util/core"
-	"github.com/kaloseia/go-util/strcase"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsfile"
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/go-util/strcase"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsfile"
 )
 
 type MorpheEnumFileWriter struct {

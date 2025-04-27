@@ -1,6 +1,6 @@
 package compile
 
-import "github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
+import "github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 
 // CompiledEntityObjects maps Entity.Name -> EntityObject.Name -> CompiledObject
 type CompiledEntityObjects map[string]map[string]CompiledObject

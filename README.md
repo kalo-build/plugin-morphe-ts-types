@@ -1,6 +1,6 @@
 # plugin-morphe-ts-types
 
-A TypeScript type definition generator plugin for [Morphe specifications](https://github.com/kaloseia/morphe-spec).
+A TypeScript type definition generator plugin for [Morphe specifications](https://github.com/kalo-build/morphe-spec).
 
 ## Overview
 
@@ -83,7 +83,7 @@ export type PersonIDPrimary = {
 }
 ```
 
-See [testdata](https://github.com/kaloseia/plugin-morphe-ts-types/tree/main/testdata) for more examples.
+See [testdata](https://github.com/kalo-build/plugin-morphe-ts-types/tree/main/testdata) for more examples.
 
 ## Configuration / Usage
 

@@ -1,6 +1,6 @@
 package tsdef
 
-import "github.com/kaloseia/clone"
+import "github.com/kalo-build/clone"
 
 type Object struct {
 	Name    string

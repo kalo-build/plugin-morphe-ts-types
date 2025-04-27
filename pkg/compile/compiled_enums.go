@@ -1,6 +1,6 @@
 package compile
 
-import "github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
+import "github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 
 // CompiledEnums maps Enum.Name -> CompiledEnum
 type CompiledEnums map[string]CompiledEnum

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kaloseia/morphe-go/pkg/registry"
-	"github.com/kaloseia/morphe-go/pkg/yaml"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/cfg"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/compile/hook"
-	"github.com/kaloseia/plugin-morphe-ts-types/pkg/tsdef"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/hook"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 	"github.com/stretchr/testify/suite"
 )
 

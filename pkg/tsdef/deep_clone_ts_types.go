@@ -2,7 +2,7 @@ package tsdef
 
 import (
 	"github.com/barkimedes/go-deepcopy"
-	"github.com/kaloseia/clone"
+	"github.com/kalo-build/clone"
 )
 
 // DeepCloneTsTypeMap attempts to deep clone a map of TsTypes.
