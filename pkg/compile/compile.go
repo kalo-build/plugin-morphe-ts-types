@@ -8,44 +8,56 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 		return rErr
 	}
 
-	allEnumDefs, compileAllEnumsErr := AllMorpheEnumsToTsEnums(config, r)
-	if compileAllEnumsErr != nil {
-		return compileAllEnumsErr
+	hasEnums := r.HasEnums()
+	if hasEnums {
+		allEnumDefs, compileAllEnumsErr := AllMorpheEnumsToTsEnums(config, r)
+		if compileAllEnumsErr != nil {
+			return compileAllEnumsErr
+		}
+
+		_, writeAllEnumsErr := WriteAllEnumDefinitions(config, allEnumDefs)
+		if writeAllEnumsErr != nil {
+			return writeAllEnumsErr
+		}
 	}
 
-	_, writeAllEnumsErr := WriteAllEnumDefinitions(config, allEnumDefs)
-	if writeAllEnumsErr != nil {
-		return writeAllEnumsErr
+	hasModels := r.HasModels()
+	if hasModels {
+		allModelObjectDefs, compileAllModelsErr := AllMorpheModelsToTsObjects(config, r)
+		if compileAllModelsErr != nil {
+			return compileAllModelsErr
+		}
+
+		_, writeAllModelsErr := WriteAllModelObjectDefinitions(config, allModelObjectDefs)
+		if writeAllModelsErr != nil {
+			return writeAllModelsErr
+		}
 	}
 
-	allModelObjectDefs, compileAllModelsErr := AllMorpheModelsToTsObjects(config, r)
-	if compileAllModelsErr != nil {
-		return compileAllModelsErr
+	hasStructures := r.HasStructures()
+	if hasStructures {
+		allStructureObjectDefs, compileAllStructuresErr := AllMorpheStructuresToTsObjects(config, r)
+		if compileAllStructuresErr != nil {
+			return compileAllStructuresErr
+		}
+
+		_, writeAllStructuresErr := WriteAllStructureObjectDefinitions(config, allStructureObjectDefs)
+		if writeAllStructuresErr != nil {
+			return writeAllStructuresErr
+		}
 	}
 
-	_, writeAllModelsErr := WriteAllModelObjectDefinitions(config, allModelObjectDefs)
-	if writeAllModelsErr != nil {
-		return writeAllModelsErr
-	}
+	hasEntities := r.HasEntities()
+	if hasEntities {
+		allEntityObjectDefs, compileAllEntitiesErr := AllMorpheEntitiesToTsObjects(config, r)
+		if compileAllEntitiesErr != nil {
+			return compileAllEntitiesErr
+		}
 
-	allStructureObjectDefs, compileAllStructuresErr := AllMorpheStructuresToTsObjects(config, r)
-	if compileAllStructuresErr != nil {
-		return compileAllStructuresErr
-	}
-
-	_, writeAllStructuresErr := WriteAllStructureObjectDefinitions(config, allStructureObjectDefs)
-	if writeAllStructuresErr != nil {
-		return writeAllStructuresErr
-	}
-
-	allEntityObjectDefs, compileAllEntitiesErr := AllMorpheEntitiesToTsObjects(config, r)
-	if compileAllEntitiesErr != nil {
-		return compileAllEntitiesErr
-	}
-
-	_, writeAllEntitiesErr := WriteAllEntityObjectDefinitions(config, allEntityObjectDefs)
-	if writeAllEntitiesErr != nil {
-		return writeAllEntitiesErr
+		_, writeAllEntitiesErr := WriteAllEntityObjectDefinitions(config, allEntityObjectDefs)
+		if writeAllEntitiesErr != nil {
+			return writeAllEntitiesErr
+		}
 	}
 
 	return nil
