@@ -66,3 +66,7 @@ func (w *MorpheEnumFileWriter) formatEnumValue(value any) string {
 		return fmt.Sprintf("%v", typedValue)
 	}
 }
+
+func (w *MorpheEnumFileWriter) ClearFile(enumName string) error {
+	return tsfile.ClearTsDefinitionFile(w.TargetDirPath, enumName)
+}

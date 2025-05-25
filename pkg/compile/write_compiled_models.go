@@ -13,6 +13,12 @@ func WriteAllModelObjectDefinitions(config MorpheCompileConfig, allModelObjectDe
 
 	sortedModelNames := core.MapKeysSorted(allModelObjectDefs)
 	for _, modelName := range sortedModelNames {
+		if clearErr := config.ModelWriter.ClearFile(modelName); clearErr != nil {
+			return nil, clearErr
+		}
+	}
+
+	for _, modelName := range sortedModelNames {
 		modelObjects := allModelObjectDefs[modelName]
 		for _, subModelObject := range modelObjects {
 			subModelObject, subModelObjectContents, writeErr := WriteModelObjectDefinition(config.WriteObjectHooks, config.ModelWriter, modelName, subModelObject)

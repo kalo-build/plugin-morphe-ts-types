@@ -21,6 +21,13 @@ func WriteAllStructureObjectDefinitions(config MorpheCompileConfig, allStructure
 	objectKeys := core.MapKeysSorted(allStructureObjectDefs)
 	for _, objectKey := range objectKeys {
 		structureObject := allStructureObjectDefs[objectKey]
+		if clearErr := config.StructureWriter.ClearFile(structureObject.Name); clearErr != nil {
+			return nil, clearErr
+		}
+	}
+
+	for _, objectKey := range objectKeys {
+		structureObject := allStructureObjectDefs[objectKey]
 		structureObject, structureObjectContents, writeErr := WriteStructureObjectDefinition(config.WriteObjectHooks, config.StructureWriter, structureObject)
 		if writeErr != nil {
 			return nil, writeErr

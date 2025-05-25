@@ -13,6 +13,12 @@ func WriteAllEntityObjectDefinitions(config MorpheCompileConfig, allEntityObject
 
 	sortedEntityNames := core.MapKeysSorted(allEntityObjectDefs)
 	for _, entityName := range sortedEntityNames {
+		if clearErr := config.EntityWriter.ClearFile(entityName); clearErr != nil {
+			return nil, clearErr
+		}
+	}
+
+	for _, entityName := range sortedEntityNames {
 		entityObjects := allEntityObjectDefs[entityName]
 		for _, subEntityObject := range entityObjects {
 			subEntityObject, subEntityObjectContents, writeErr := WriteEntityObjectDefinition(config.WriteObjectHooks, config.EntityWriter, entityName, subEntityObject)

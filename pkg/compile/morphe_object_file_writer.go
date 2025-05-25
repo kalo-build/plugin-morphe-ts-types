@@ -92,3 +92,7 @@ func (w *MorpheObjectFileWriter) getAllObjectImportLines(objectDefinition *tsdef
 
 	return allImportLines, nil
 }
+
+func (w *MorpheObjectFileWriter) ClearFile(mainObjectName string) error {
+	return tsfile.ClearTsDefinitionFile(w.TargetDirPath, mainObjectName)
+}

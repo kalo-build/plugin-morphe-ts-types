@@ -13,6 +13,12 @@ func WriteAllEnumDefinitions(config MorpheCompileConfig, allEnumDefs map[string]
 
 	sortedEnumNames := core.MapKeysSorted(allEnumDefs)
 	for _, enumName := range sortedEnumNames {
+		if clearErr := config.EnumWriter.ClearFile(enumName); clearErr != nil {
+			return nil, clearErr
+		}
+	}
+
+	for _, enumName := range sortedEnumNames {
 		enumDef := allEnumDefs[enumName]
 		enumDef, enumContents, writeErr := WriteEnumDefinition(config.WriteEnumHooks, config.EnumWriter, enumName, enumDef)
 		if writeErr != nil {
