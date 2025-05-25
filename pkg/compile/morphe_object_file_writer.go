@@ -25,7 +25,7 @@ func (w *MorpheObjectFileWriter) WriteObject(mainObjectName string, objectDefini
 		return nil, objectContentsErr
 	}
 
-	return tsfile.WriteAppendTsDefinitionFile(w.TargetDirPath, mainObjectName, objectFileContents)
+	return tsfile.WriteTsDefinitionFile(w.TargetDirPath, mainObjectName, objectFileContents)
 }
 
 func (w *MorpheObjectFileWriter) getAllObjectLines(mainObjectName string, objectDefinition *tsdef.Object) ([]string, error) {

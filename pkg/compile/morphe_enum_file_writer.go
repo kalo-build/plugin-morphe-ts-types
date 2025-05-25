@@ -25,7 +25,7 @@ func (w *MorpheEnumFileWriter) WriteEnum(enumName string, enumDefinition *tsdef.
 		return nil, enumContentsErr
 	}
 
-	return tsfile.WriteAppendTsDefinitionFile(w.TargetDirPath, enumName, enumFileContents)
+	return tsfile.WriteTsDefinitionFile(w.TargetDirPath, enumName, enumFileContents)
 }
 
 func (w *MorpheEnumFileWriter) getAllEnumLines(enumName string, enumDefinition *tsdef.Enum) ([]string, error) {
