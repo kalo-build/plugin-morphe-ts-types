@@ -44,7 +44,7 @@ func getDirectTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[str
 		}
 
 		typeField := tsdef.ObjectField{
-			Name: fieldName,
+			Name: strcase.ToCamelCase(fieldName),
 			Type: tsType,
 		}
 		allFields = append(allFields, typeField)
@@ -101,23 +101,62 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 	allFields := []tsdef.ObjectField{}
 
 	allRelatedEntityNames := core.MapKeysSorted(entityRelations)
-	for _, relatedEntityName := range allRelatedEntityNames {
-		entityRelation := entityRelations[relatedEntityName]
-		relatedEntityDef, relatedEntityDefErr := r.GetEntity(relatedEntityName)
-		if relatedEntityDefErr != nil {
-			return nil, relatedEntityDefErr
+	for _, relationshipName := range allRelatedEntityNames {
+		entityRelation := entityRelations[relationshipName]
+
+		// Handle different relationship types
+		switch entityRelation.Type {
+		case "ForOnePoly", "ForManyPoly":
+			// For polymorphic "For" relationships, we need ID, type, and union fields
+			polyFields, polyErr := getPolymorphicForTsFieldsForEntity(r, relationshipName, entityRelation)
+			if polyErr != nil {
+				return nil, polyErr
+			}
+			allFields = append(allFields, polyFields...)
+
+		case "HasOnePoly", "HasManyPoly":
+			// For polymorphic "Has" relationships, use the aliased entity
+			targetEntityName := entityRelation.Aliased
+			if targetEntityName == "" {
+				return nil, fmt.Errorf("polymorphic Has* relationship '%s' must specify 'aliased' property", relationshipName)
+			}
+
+			targetEntityDef, targetEntityDefErr := r.GetEntity(targetEntityName)
+			if targetEntityDefErr != nil {
+				return nil, targetEntityDefErr
+			}
+
+			// Generate regular ID and object fields with the relationship name
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, targetEntityDef)
+			if tsIDErr != nil {
+				return nil, tsIDErr
+			}
+			allFields = append(allFields, tsIDField)
+
+			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName)
+			allFields = append(allFields, tsRelatedField)
+
+		default:
+			// Regular relationships
+			targetEntityName := relationshipName
+			if entityRelation.Aliased != "" {
+				targetEntityName = entityRelation.Aliased
+			}
+
+			relatedEntityDef, relatedEntityDefErr := r.GetEntity(targetEntityName)
+			if relatedEntityDefErr != nil {
+				return nil, relatedEntityDefErr
+			}
+
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, relatedEntityDef)
+			if tsIDErr != nil {
+				return nil, tsIDErr
+			}
+			allFields = append(allFields, tsIDField)
+
+			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName)
+			allFields = append(allFields, tsRelatedField)
 		}
-
-		tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relatedEntityName, relatedEntityDef)
-
-		if tsIDErr != nil {
-			return nil, tsIDErr
-		}
-		allFields = append(allFields, tsIDField)
-
-		tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObject(entityRelation.Type, relatedEntityName)
-		allFields = append(allFields, tsRelatedField)
-
 	}
 	return allFields, nil
 }
@@ -127,7 +166,7 @@ func getRelatedTsFieldForMorpheEntityPrimaryID(r *registry.Registry, relationTyp
 	if relatedIDFieldNameErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w", relatedIDFieldNameErr)
 	}
-	idFieldName := fmt.Sprintf("%s%s", relatedEntityName, relatedPrimaryIDFieldName)
+	idFieldName := strcase.ToCamelCase(fmt.Sprintf("%s%s", relatedEntityName, relatedPrimaryIDFieldName))
 
 	relatedPrimaryIDFieldDef, relatedIDFieldDefErr := yamlops.GetEntityFieldDefinitionByName(relatedEntityDef, relatedPrimaryIDFieldName)
 	if relatedIDFieldDefErr != nil {
@@ -185,5 +224,103 @@ func getRelatedTsFieldForMorpheEntityOptionalObject(relationType string, related
 		},
 	}
 	return tsRelatedField
+}
 
+func getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(relationType string, relationshipName string, targetEntityName string) tsdef.ObjectField {
+	relationshipNameCamel := strcase.ToCamelCase(relationshipName)
+
+	if yamlops.IsRelationMany(relationType) {
+		tsRelatedField := tsdef.ObjectField{
+			Name: relationshipNameCamel + "s",
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{
+					ValueType: tsdef.TsTypeObject{
+						ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
+						Name:       targetEntityName,
+					},
+				},
+			},
+		}
+		return tsRelatedField
+	}
+
+	tsRelatedField := tsdef.ObjectField{
+		Name: relationshipNameCamel,
+		Type: tsdef.TsTypeOptional{
+			ValueType: tsdef.TsTypeObject{
+				ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
+				Name:       targetEntityName,
+			},
+		},
+	}
+	return tsRelatedField
+}
+
+func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName string, entityRelation yaml.EntityRelation) ([]tsdef.ObjectField, error) {
+	if len(entityRelation.For) == 0 {
+		return nil, fmt.Errorf("polymorphic relation '%s' must have at least one entity in 'for' property", relationshipName)
+	}
+
+	relationshipNameCamel := strcase.ToCamelCase(relationshipName)
+	allFields := []tsdef.ObjectField{}
+
+	// Add ID field(s)
+	if yamlops.IsRelationMany(entityRelation.Type) {
+		allFields = append(allFields, tsdef.ObjectField{
+			Name: relationshipNameCamel + "IDs",
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{
+					ValueType: tsdef.TsTypeString,
+				},
+			},
+		})
+	} else {
+		allFields = append(allFields, tsdef.ObjectField{
+			Name: relationshipNameCamel + "ID",
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeString,
+			},
+		})
+	}
+
+	// Add type field
+	allFields = append(allFields, tsdef.ObjectField{
+		Name: relationshipNameCamel + "Type",
+		Type: tsdef.TsTypeOptional{
+			ValueType: tsdef.TsTypeString,
+		},
+	})
+
+	// Add union type field
+	unionTypes := []tsdef.TsType{}
+	for _, targetEntityName := range entityRelation.For {
+		unionTypes = append(unionTypes, tsdef.TsTypeObject{
+			ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
+			Name:       targetEntityName,
+		})
+	}
+
+	if yamlops.IsRelationMany(entityRelation.Type) {
+		allFields = append(allFields, tsdef.ObjectField{
+			Name: relationshipNameCamel + "s",
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{
+					ValueType: tsdef.TsTypeUnion{
+						Types: unionTypes,
+					},
+				},
+			},
+		})
+	} else {
+		allFields = append(allFields, tsdef.ObjectField{
+			Name: relationshipNameCamel,
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeUnion{
+					Types: unionTypes,
+				},
+			},
+		})
+	}
+
+	return allFields, nil
 }

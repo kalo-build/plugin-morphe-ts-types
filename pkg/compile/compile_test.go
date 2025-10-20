@@ -86,20 +86,30 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	gtModelsDirPath := suite.TestGroundTruthDirPath + "/models"
 	suite.DirExists(modelsDirPath)
 
-	modelPath0 := modelsDirPath + "/contact-info.d.ts"
-	gtModelPath0 := gtModelsDirPath + "/contact-info.d.ts"
+	modelPath0 := modelsDirPath + "/comment.d.ts"
+	gtModelPath0 := gtModelsDirPath + "/comment.d.ts"
 	suite.FileExists(modelPath0)
 	suite.FileEquals(modelPath0, gtModelPath0)
 
-	modelPath1 := modelsDirPath + "/person.d.ts"
-	gtModelPath1 := gtModelsDirPath + "/person.d.ts"
+	modelPath1 := modelsDirPath + "/company.d.ts"
+	gtModelPath1 := gtModelsDirPath + "/company.d.ts"
 	suite.FileExists(modelPath1)
 	suite.FileEquals(modelPath1, gtModelPath1)
 
-	modelPath2 := modelsDirPath + "/company.d.ts"
-	gtModelPath2 := gtModelsDirPath + "/company.d.ts"
+	modelPath2 := modelsDirPath + "/contact.d.ts"
+	gtModelPath2 := gtModelsDirPath + "/contact.d.ts"
 	suite.FileExists(modelPath2)
 	suite.FileEquals(modelPath2, gtModelPath2)
+
+	modelPath3 := modelsDirPath + "/contact-info.d.ts"
+	gtModelPath3 := gtModelsDirPath + "/contact-info.d.ts"
+	suite.FileExists(modelPath3)
+	suite.FileEquals(modelPath3, gtModelPath3)
+
+	modelPath4 := modelsDirPath + "/person.d.ts"
+	gtModelPath4 := gtModelsDirPath + "/person.d.ts"
+	suite.FileExists(modelPath4)
+	suite.FileEquals(modelPath4, gtModelPath4)
 
 	enumsDirPath := workingDirPath + "/enums"
 	gtEnumsDirPath := suite.TestGroundTruthDirPath + "/enums"

@@ -159,8 +159,10 @@ func getModelIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName 
 	identifierFieldDefs := []tsdef.ObjectField{}
 	for _, fieldName := range identifier.Fields {
 		identifierFieldDef := tsdef.ObjectField{}
+		// Convert Morphe field name to camelCase for comparison with TypeScript field names
+		tsFieldName := strcase.ToCamelCase(fieldName)
 		for _, modelFieldDef := range modelType.Fields {
-			if modelFieldDef.Name != fieldName {
+			if modelFieldDef.Name != tsFieldName {
 				continue
 			}
 			identifierFieldDef = tsdef.ObjectField{

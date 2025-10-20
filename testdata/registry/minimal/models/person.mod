@@ -20,3 +20,13 @@ related:
     type: HasOne
   Company:
     type: ForOne
+  WorkContact:
+    type: ForOne
+    aliased: Contact
+  PersonalContact:
+    type: ForOne
+    aliased: Contact
+  Note:
+    type: HasManyPoly
+    through: Commentable
+    aliased: Comment

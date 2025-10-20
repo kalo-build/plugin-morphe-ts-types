@@ -14,3 +14,13 @@ identifiers:
 related:
   Person:
     type: HasMany
+  MainContact:
+    type: ForOne
+    aliased: Contact
+  MailingContact:
+    type: ForOne
+    aliased: Contact
+  Note:
+    type: HasManyPoly
+    through: Commentable
+    aliased: Comment

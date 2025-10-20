@@ -53,7 +53,7 @@ func morpheEntityToTsObjectTypes(config cfg.MorpheEntitiesConfig, r *registry.Re
 	if validateConfigErr != nil {
 		return nil, validateConfigErr
 	}
-	validateMorpheErr := entity.Validate(r.GetAllModels(), r.GetAllEnums())
+	validateMorpheErr := entity.Validate(r.GetAllEntities(), r.GetAllModels(), r.GetAllEnums())
 	if validateMorpheErr != nil {
 		return nil, validateMorpheErr
 	}
@@ -129,8 +129,10 @@ func getEntityIdentifierObjectFieldSubset(entityType tsdef.Object, identifierNam
 	identifierFieldDefs := []tsdef.ObjectField{}
 	for _, fieldName := range identifier.Fields {
 		identifierFieldDef := tsdef.ObjectField{}
+		// Convert Morphe field name to camelCase for comparison with TypeScript field names
+		tsFieldName := strcase.ToCamelCase(fieldName)
 		for _, entityFieldDef := range entityType.Fields {
-			if entityFieldDef.Name != fieldName {
+			if entityFieldDef.Name != tsFieldName {
 				continue
 			}
 			identifierFieldDef = tsdef.ObjectField{
