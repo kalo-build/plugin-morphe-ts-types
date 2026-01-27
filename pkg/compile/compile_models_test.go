@@ -1526,6 +1526,216 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasManyP
 	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
 }
 
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasOnePoly_WithoutAliased() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	commentModel := yaml.Model{
+		Name: "Comment",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Content": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Commentable": {
+				Type: "ForOnePoly",
+				For:  []string{"Post"},
+			},
+		},
+	}
+
+	postModel := yaml.Model{
+		Name: "Post",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Title": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Comment": {
+				Type:    "HasOnePoly",
+				Through: "Commentable",
+				// No Aliased property - should use relationship name "Comment" as target model
+			},
+		},
+	}
+
+	r := registry.NewRegistry()
+	r.SetModel("Comment", commentModel)
+	r.SetModel("Post", postModel)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, postModel)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Post")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	// Regular fields
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "id")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "title")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	// Has* polymorphic generates regular ID and struct fields using relationship name
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "commentID")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeNumber,
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "comment")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./comment",
+			Name:       "Comment",
+		},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "PostIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "id")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
+func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasManyPoly_WithoutAliased() {
+	modelHooks := hook.CompileMorpheModel{}
+
+	modelsConfig := cfg.MorpheModelsConfig{}
+
+	tagModel := yaml.Model{
+		Name: "Tag",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Name": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Taggable": {
+				Type: "ForManyPoly",
+				For:  []string{"Post"},
+			},
+		},
+	}
+
+	postModel := yaml.Model{
+		Name: "Post",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeAutoIncrement,
+			},
+			"Title": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Tag": {
+				Type:    "HasManyPoly",
+				Through: "Taggable",
+				// No Aliased property - should use relationship name "Tag" as target model
+			},
+		},
+	}
+
+	r := registry.NewRegistry()
+	r.SetModel("Tag", tagModel)
+	r.SetModel("Post", postModel)
+
+	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, postModel)
+
+	suite.Nil(allTsObjectsErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Post")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 4)
+
+	// Regular fields
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "id")
+	suite.Equal(tsField00.Type, tsdef.TsTypeNumber)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "title")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	// Has* polymorphic generates regular ID array and struct array fields using relationship name
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "tagIDs")
+	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeNumber,
+		},
+	})
+
+	tsField03 := tsFields0[3]
+	suite.Equal(tsField03.Name, "tags")
+	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
+		ValueType: tsdef.TsTypeArray{
+			ValueType: tsdef.TsTypeObject{
+				ModulePath: "./tag",
+				Name:       "Tag",
+			},
+		},
+	})
+
+	tsObject1 := allTsObjects[1]
+	suite.Equal(tsObject1.Name, "PostIDPrimary")
+
+	tsFields1 := tsObject1.Fields
+	suite.Len(tsFields1, 1)
+
+	tsField10 := tsFields1[0]
+	suite.Equal(tsField10.Name, "id")
+	suite.Equal(tsField10.Type, tsdef.TsTypeNumber)
+}
+
 func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne_Aliased() {
 	modelHooks := hook.CompileMorpheModel{}
 

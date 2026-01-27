@@ -115,10 +115,10 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 			allFields = append(allFields, polyFields...)
 
 		case "HasOnePoly", "HasManyPoly":
-			// For polymorphic "Has" relationships, use the aliased entity
-			targetEntityName := entityRelation.Aliased
-			if targetEntityName == "" {
-				return nil, fmt.Errorf("polymorphic Has* relationship '%s' must specify 'aliased' property", relationshipName)
+			// For polymorphic "Has" relationships, use the aliased entity if provided, otherwise use relationship name
+			targetEntityName := relationshipName
+			if entityRelation.Aliased != "" {
+				targetEntityName = entityRelation.Aliased
 			}
 
 			targetEntityDef, targetEntityDefErr := r.GetEntity(targetEntityName)

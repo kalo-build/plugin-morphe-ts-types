@@ -74,10 +74,10 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 			allFields = append(allFields, polyFields...)
 
 		case "HasOnePoly", "HasManyPoly":
-			// For polymorphic "Has" relationships, use the aliased model
-			targetModelName := modelRelation.Aliased
-			if targetModelName == "" {
-				return nil, fmt.Errorf("polymorphic Has* relationship '%s' must specify 'aliased' property", relationshipName)
+			// For polymorphic "Has" relationships, use the aliased model if provided, otherwise use relationship name
+			targetModelName := relationshipName
+			if modelRelation.Aliased != "" {
+				targetModelName = modelRelation.Aliased
 			}
 
 			targetModelDef, targetModelDefErr := r.GetModel(targetModelName)
