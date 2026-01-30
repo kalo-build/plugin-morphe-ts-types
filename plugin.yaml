@@ -1,0 +1,20 @@
+name: "@kalo-build/plugin-morphe-ts-types"
+displayName: "Morphe TypeScript Types"
+description: "Generates TypeScript type definitions from Morphe model definitions. Creates interfaces for models, entities, enums, and structures."
+version: "1.0.0"
+
+input:
+  format: "KA:MO1:YAML1"
+  description: "Morphe YAML schema files"
+  suggestedStore:
+    name: "KA_MO_YAML"
+    type: "localFileSystem"
+    path: "./morphe"
+
+output:
+  format: "KA:MO1:TS1"
+  description: "TypeScript type definition files"
+  suggestedStore:
+    name: "KA_MO_TS"
+    type: "localFileSystem"
+    path: "./types"
