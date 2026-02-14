@@ -8,20 +8,21 @@ import (
 	"github.com/kalo-build/morphe-go/pkg/registry"
 	"github.com/kalo-build/morphe-go/pkg/yaml"
 	"github.com/kalo-build/morphe-go/pkg/yamlops"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/typemap"
 )
 
-func getTsFieldsForMorpheModel(r *registry.Registry, modelFields map[string]yaml.ModelField, modelRelations map[string]yaml.ModelRelation) ([]tsdef.ObjectField, error) {
+func getTsFieldsForMorpheModel(r *registry.Registry, modelFields map[string]yaml.ModelField, modelRelations map[string]yaml.ModelRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	if r == nil {
 		return nil, ErrNoRegistry
 	}
-	allFields, fieldErr := getDirectTsFieldsForMorpheModel(r.GetAllEnums(), modelFields)
+	allFields, fieldErr := getDirectTsFieldsForMorpheModel(r.GetAllEnums(), modelFields, fieldCasing)
 	if fieldErr != nil {
 		return nil, fieldErr
 	}
 
-	allRelatedFields, relatedErr := getRelatedTsFieldsForMorpheModel(r, modelRelations)
+	allRelatedFields, relatedErr := getRelatedTsFieldsForMorpheModel(r, modelRelations, fieldCasing)
 	if relatedErr != nil {
 		return nil, relatedErr
 	}
@@ -30,14 +31,17 @@ func getTsFieldsForMorpheModel(r *registry.Registry, modelFields map[string]yaml
 	return allFields, nil
 }
 
-func getDirectTsFieldsForMorpheModel(allEnums map[string]yaml.Enum, modelFields map[string]yaml.ModelField) ([]tsdef.ObjectField, error) {
+func getDirectTsFieldsForMorpheModel(allEnums map[string]yaml.Enum, modelFields map[string]yaml.ModelField, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	allFields := []tsdef.ObjectField{}
 	allFieldNames := core.MapKeysSorted(modelFields)
 	for _, fieldName := range allFieldNames {
 		fieldDef := modelFields[fieldName]
 
-		tsEnumField := getEnumFieldAsTsFieldType(allEnums, fieldName, string(fieldDef.Type))
+		tsEnumField := getEnumFieldAsTsFieldType(allEnums, fieldName, string(fieldDef.Type), fieldCasing)
 		if tsEnumField.Name != "" && tsEnumField.Type != nil {
+			if hasAttribute(fieldDef.Attributes, "optional") {
+				tsEnumField.Type = tsdef.TsTypeOptional{ValueType: tsEnumField.Type}
+			}
 			allFields = append(allFields, tsEnumField)
 			continue
 		}
@@ -46,9 +50,16 @@ func getDirectTsFieldsForMorpheModel(allEnums map[string]yaml.Enum, modelFields 
 		if !typeSupported {
 			return nil, ErrUnsupportedMorpheFieldType(fieldDef.Type)
 		}
+
+		// Model fields are required by default; wrap in TsTypeOptional for "optional" attribute
+		var finalType tsdef.TsType = tsFieldType
+		if hasAttribute(fieldDef.Attributes, "optional") {
+			finalType = tsdef.TsTypeOptional{ValueType: tsFieldType}
+		}
+
 		tsField := tsdef.ObjectField{
-			Name: strcase.ToCamelCase(fieldName),
-			Type: tsFieldType,
+			Name: fieldCasing.Apply(fieldName),
+			Type: finalType,
 		}
 		allFields = append(allFields, tsField)
 	}
@@ -56,7 +67,7 @@ func getDirectTsFieldsForMorpheModel(allEnums map[string]yaml.Enum, modelFields 
 	return allFields, nil
 }
 
-func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[string]yaml.ModelRelation) ([]tsdef.ObjectField, error) {
+func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[string]yaml.ModelRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	allFields := []tsdef.ObjectField{}
 
 	allRelatedModelNames := core.MapKeysSorted(modelRelations)
@@ -67,7 +78,7 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 		switch modelRelation.Type {
 		case "ForOnePoly", "ForManyPoly":
 			// For polymorphic "For" relationships, we need ID, type, and union fields
-			polyFields, polyErr := getPolymorphicForTsFields(r, relationshipName, modelRelation)
+			polyFields, polyErr := getPolymorphicForTsFields(r, relationshipName, modelRelation, fieldCasing)
 			if polyErr != nil {
 				return nil, polyErr
 			}
@@ -86,13 +97,13 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 			}
 
 			// Generate regular ID and object fields with the relationship name
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef, fieldCasing)
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(modelRelation.Type, relationshipName, targetModelName)
+			tsRelatedField := getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(modelRelation.Type, relationshipName, targetModelName, fieldCasing)
 			allFields = append(allFields, tsRelatedField)
 
 		default:
@@ -107,20 +118,20 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 				return nil, targetModelDefErr
 			}
 
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef, fieldCasing)
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(modelRelation.Type, relationshipName, targetModelName)
+			tsRelatedField := getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(modelRelation.Type, relationshipName, targetModelName, fieldCasing)
 			allFields = append(allFields, tsRelatedField)
 		}
 	}
 	return allFields, nil
 }
 
-func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, enumName string) tsdef.ObjectField {
+func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, enumName string, fieldCasing cfg.Casing) tsdef.ObjectField {
 	if len(allEnums) == 0 {
 		return tsdef.ObjectField{}
 	}
@@ -135,18 +146,18 @@ func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, 
 		Name:       enumName,
 	}
 	tsField := tsdef.ObjectField{
-		Name: strcase.ToCamelCase(fieldName),
+		Name: fieldCasing.Apply(fieldName),
 		Type: tsFieldType,
 	}
 	return tsField
 }
 
-func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelName string, relatedModelDef yaml.Model) (tsdef.ObjectField, error) {
+func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelName string, relatedModelDef yaml.Model, fieldCasing cfg.Casing) (tsdef.ObjectField, error) {
 	relatedPrimaryIDFieldName, relatedIDFieldNameErr := yamlops.GetModelPrimaryIdentifierFieldName(relatedModelDef)
 	if relatedIDFieldNameErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w", relatedIDFieldNameErr)
 	}
-	idFieldName := strcase.ToCamelCase(fmt.Sprintf("%s%s", relatedModelName, relatedPrimaryIDFieldName))
+	idFieldName := fieldCasing.Apply(fmt.Sprintf("%s%s", relatedModelName, relatedPrimaryIDFieldName))
 
 	relatedPrimaryIDFieldDef, relatedIDFieldDefErr := yamlops.GetModelFieldDefinitionByName(relatedModelDef, relatedPrimaryIDFieldName)
 	if relatedIDFieldDefErr != nil {
@@ -206,8 +217,8 @@ func getRelatedTsFieldForMorpheModelOptionalObject(relationType string, relatedM
 	return tsRelatedField
 }
 
-func getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(relationType string, relationshipName string, targetModelName string) tsdef.ObjectField {
-	relationshipNameCamel := strcase.ToCamelCase(relationshipName)
+func getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(relationType string, relationshipName string, targetModelName string, fieldCasing cfg.Casing) tsdef.ObjectField {
+	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 
 	if yamlops.IsRelationMany(relationType) {
 		tsRelatedField := tsdef.ObjectField{
@@ -236,12 +247,12 @@ func getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(relationType st
 	return tsRelatedField
 }
 
-func getPolymorphicForTsFields(r *registry.Registry, relationshipName string, modelRelation yaml.ModelRelation) ([]tsdef.ObjectField, error) {
+func getPolymorphicForTsFields(r *registry.Registry, relationshipName string, modelRelation yaml.ModelRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	if len(modelRelation.For) == 0 {
 		return nil, fmt.Errorf("polymorphic relation '%s' must have at least one model in 'for' property", relationshipName)
 	}
 
-	relationshipNameCamel := strcase.ToCamelCase(relationshipName)
+	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 	allFields := []tsdef.ObjectField{}
 
 	// Add ID field(s)

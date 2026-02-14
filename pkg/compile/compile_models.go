@@ -15,8 +15,10 @@ import (
 
 func AllMorpheModelsToTsObjects(config MorpheCompileConfig, r *registry.Registry) (map[string][]*tsdef.Object, error) {
 	allModelTypeDefs := map[string][]*tsdef.Object{}
+	modelsConfig := config.MorpheModelsConfig
+	modelsConfig.FieldCasing = config.FieldCasing
 	for modelName, model := range r.GetAllModels() {
-		modelTypes, modelErr := MorpheModelToTsObjects(config.ModelHooks, config.MorpheModelsConfig, r, model)
+		modelTypes, modelErr := MorpheModelToTsObjects(config.ModelHooks, modelsConfig, r, model)
 		if modelErr != nil {
 			return nil, modelErr
 		}
@@ -33,7 +35,7 @@ func MorpheModelToTsObjects(modelHooks hook.CompileMorpheModel, config cfg.Morph
 	if compileStartErr != nil {
 		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, compileStartErr)
 	}
-	allModelTypes, objectsErr := morpheModelToTsObjectTypes(config, r, model)
+	allModelTypes, objectsErr := morpheModelToTsObjectTypes(config, config.FieldCasing, r, model)
 	if objectsErr != nil {
 		return nil, triggerCompileMorpheModelFailure(modelHooks, config, model, objectsErr)
 	}
@@ -45,7 +47,7 @@ func MorpheModelToTsObjects(modelHooks hook.CompileMorpheModel, config cfg.Morph
 	return allModelTypes, nil
 }
 
-func morpheModelToTsObjectTypes(config cfg.MorpheModelsConfig, r *registry.Registry, model yaml.Model) ([]*tsdef.Object, error) {
+func morpheModelToTsObjectTypes(config cfg.MorpheModelsConfig, fieldCasing cfg.Casing, r *registry.Registry, model yaml.Model) ([]*tsdef.Object, error) {
 	validateConfigErr := config.Validate()
 	if validateConfigErr != nil {
 		return nil, validateConfigErr
@@ -55,11 +57,11 @@ func morpheModelToTsObjectTypes(config cfg.MorpheModelsConfig, r *registry.Regis
 		return nil, validateMorpheErr
 	}
 
-	modelType, modelTypeErr := getModelObjectType(r, model)
+	modelType, modelTypeErr := getModelObjectType(r, model, fieldCasing)
 	if modelTypeErr != nil {
 		return nil, modelTypeErr
 	}
-	allIdentifierTypes, identifierTypesErr := getAllModelIdentifierObjectTypes(model, modelType)
+	allIdentifierTypes, identifierTypesErr := getAllModelIdentifierObjectTypes(model, modelType, fieldCasing)
 	if identifierTypesErr != nil {
 		return nil, identifierTypesErr
 	}
@@ -108,11 +110,11 @@ func triggerCompileMorpheModelFailure(hooks hook.CompileMorpheModel, config cfg.
 	return hooks.OnCompileMorpheModelFailure(config, model.DeepClone(), failureErr)
 }
 
-func getModelObjectType(r *registry.Registry, model yaml.Model) (*tsdef.Object, error) {
+func getModelObjectType(r *registry.Registry, model yaml.Model, fieldCasing cfg.Casing) (*tsdef.Object, error) {
 	modelType := tsdef.Object{
 		Name: model.Name,
 	}
-	typeFields, fieldsErr := getTsFieldsForMorpheModel(r, model.Fields, model.Related)
+	typeFields, fieldsErr := getTsFieldsForMorpheModel(r, model.Fields, model.Related, fieldCasing)
 	if fieldsErr != nil {
 		return nil, fieldsErr
 	}
@@ -126,14 +128,14 @@ func getModelObjectType(r *registry.Registry, model yaml.Model) (*tsdef.Object, 
 	return &modelType, nil
 }
 
-func getAllModelIdentifierObjectTypes(model yaml.Model, modelType *tsdef.Object) ([]*tsdef.Object, error) {
+func getAllModelIdentifierObjectTypes(model yaml.Model, modelType *tsdef.Object, fieldCasing cfg.Casing) ([]*tsdef.Object, error) {
 	modelIdentifiers := model.Identifiers
 	allIdentifierNames := core.MapKeysSorted(modelIdentifiers)
 	allIdentTypes := []*tsdef.Object{}
 	for _, identifierName := range allIdentifierNames {
 		identifierDef := modelIdentifiers[identifierName]
 
-		allIdentFieldDefs, identFieldDefsErr := getModelIdentifierObjectFieldSubset(*modelType, identifierName, identifierDef)
+		allIdentFieldDefs, identFieldDefsErr := getModelIdentifierObjectFieldSubset(*modelType, identifierName, identifierDef, fieldCasing)
 		if identFieldDefsErr != nil {
 			return nil, identFieldDefsErr
 		}
@@ -155,12 +157,12 @@ func getModelIdentifierObjectType(modelName string, identifierName string, allId
 	return &identifierType, nil
 }
 
-func getModelIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName string, identifier yaml.ModelIdentifier) ([]tsdef.ObjectField, error) {
+func getModelIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName string, identifier yaml.ModelIdentifier, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	identifierFieldDefs := []tsdef.ObjectField{}
 	for _, fieldName := range identifier.Fields {
 		identifierFieldDef := tsdef.ObjectField{}
-		// Convert Morphe field name to camelCase for comparison with TypeScript field names
-		tsFieldName := strcase.ToCamelCase(fieldName)
+		// Convert Morphe field name using configured casing for comparison with TypeScript field names
+		tsFieldName := fieldCasing.Apply(fieldName)
 		for _, modelFieldDef := range modelType.Fields {
 			if modelFieldDef.Name != tsFieldName {
 				continue

@@ -56,19 +56,19 @@ func (suite *CompileStructuresTestSuite) TestMorpheStructureToTsObject() {
 	suite.Len(tsFields, 4)
 
 	tsField0 := tsFields[0]
-	suite.Equal(tsField0.Name, "City")
+	suite.Equal(tsField0.Name, "city")
 	suite.Equal(tsField0.Type, tsdef.TsTypeString)
 
 	tsField1 := tsFields[1]
-	suite.Equal(tsField1.Name, "HouseNr")
+	suite.Equal(tsField1.Name, "houseNr")
 	suite.Equal(tsField1.Type, tsdef.TsTypeString)
 
 	tsField2 := tsFields[2]
-	suite.Equal(tsField2.Name, "Street")
+	suite.Equal(tsField2.Name, "street")
 	suite.Equal(tsField2.Type, tsdef.TsTypeString)
 
 	tsField3 := tsFields[3]
-	suite.Equal(tsField3.Name, "ZipCode")
+	suite.Equal(tsField3.Name, "zipCode")
 	suite.Equal(tsField3.Type, tsdef.TsTypeString)
 }
 
@@ -118,15 +118,15 @@ func (suite *CompileStructuresTestSuite) TestMorpheStructureToTsObject_StartHook
 	suite.Len(tsFields, 3)
 
 	tsField0 := tsFields[0]
-	suite.Equal(tsField0.Name, "HouseNr")
+	suite.Equal(tsField0.Name, "houseNr")
 	suite.Equal(tsField0.Type, tsdef.TsTypeString)
 
 	tsField1 := tsFields[1]
-	suite.Equal(tsField1.Name, "Street")
+	suite.Equal(tsField1.Name, "street")
 	suite.Equal(tsField1.Type, tsdef.TsTypeString)
 
 	tsField2 := tsFields[2]
-	suite.Equal(tsField2.Name, "ZipCode")
+	suite.Equal(tsField2.Name, "zipCode")
 	suite.Equal(tsField2.Type, tsdef.TsTypeString)
 }
 

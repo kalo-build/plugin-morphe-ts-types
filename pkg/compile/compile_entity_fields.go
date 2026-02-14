@@ -9,21 +9,22 @@ import (
 	"github.com/kalo-build/morphe-go/pkg/registry"
 	"github.com/kalo-build/morphe-go/pkg/yaml"
 	"github.com/kalo-build/morphe-go/pkg/yamlops"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/typemap"
 )
 
-func getTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]yaml.EntityField, entityRelations map[string]yaml.EntityRelation) ([]tsdef.ObjectField, error) {
+func getTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]yaml.EntityField, entityRelations map[string]yaml.EntityRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	if r == nil {
 		return nil, ErrNoRegistry
 	}
 
-	allFields, fieldErr := getDirectTsFieldsForMorpheEntity(r, entityFields)
+	allFields, fieldErr := getDirectTsFieldsForMorpheEntity(r, entityFields, fieldCasing)
 	if fieldErr != nil {
 		return nil, fieldErr
 	}
 
-	allRelatedFields, relatedErr := getRelatedTsFieldsForMorpheEntity(r, entityRelations)
+	allRelatedFields, relatedErr := getRelatedTsFieldsForMorpheEntity(r, entityRelations, fieldCasing)
 	if relatedErr != nil {
 		return nil, relatedErr
 	}
@@ -32,7 +33,7 @@ func getTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]ya
 	return allFields, nil
 }
 
-func getDirectTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]yaml.EntityField) ([]tsdef.ObjectField, error) {
+func getDirectTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[string]yaml.EntityField, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	allFields := []tsdef.ObjectField{}
 	allFieldNames := core.MapKeysSorted(entityFields)
 
@@ -43,9 +44,15 @@ func getDirectTsFieldsForMorpheEntity(r *registry.Registry, entityFields map[str
 			return nil, typeErr
 		}
 
+		// Entity fields are required by default; wrap in TsTypeOptional for "optional" attribute
+		var finalType tsdef.TsType = tsType
+		if hasAttribute(fieldDef.Attributes, "optional") {
+			finalType = tsdef.TsTypeOptional{ValueType: tsType}
+		}
+
 		typeField := tsdef.ObjectField{
-			Name: strcase.ToCamelCase(fieldName),
-			Type: tsType,
+			Name: fieldCasing.Apply(fieldName),
+			Type: finalType,
 		}
 		allFields = append(allFields, typeField)
 	}
@@ -85,7 +92,7 @@ func getTsTypeForEntityField(r *registry.Registry, field yaml.EntityField) (tsde
 		return nil, ErrTerminalFieldNotFound(terminalFieldName, string(field.Type))
 	}
 
-	tsEnumField := getEnumFieldAsTsFieldType(r.GetAllEnums(), terminalFieldName, string(terminalField.Type))
+	tsEnumField := getEnumFieldAsTsFieldType(r.GetAllEnums(), terminalFieldName, string(terminalField.Type), cfg.Casing(""))
 	if tsEnumField.Name != "" && tsEnumField.Type != nil {
 		return tsEnumField.Type, nil
 	}
@@ -97,7 +104,7 @@ func getTsTypeForEntityField(r *registry.Registry, field yaml.EntityField) (tsde
 	return tsFieldType, nil
 }
 
-func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map[string]yaml.EntityRelation) ([]tsdef.ObjectField, error) {
+func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map[string]yaml.EntityRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	allFields := []tsdef.ObjectField{}
 
 	allRelatedEntityNames := core.MapKeysSorted(entityRelations)
@@ -108,7 +115,7 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 		switch entityRelation.Type {
 		case "ForOnePoly", "ForManyPoly":
 			// For polymorphic "For" relationships, we need ID, type, and union fields
-			polyFields, polyErr := getPolymorphicForTsFieldsForEntity(r, relationshipName, entityRelation)
+			polyFields, polyErr := getPolymorphicForTsFieldsForEntity(r, relationshipName, entityRelation, fieldCasing)
 			if polyErr != nil {
 				return nil, polyErr
 			}
@@ -127,13 +134,13 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 			}
 
 			// Generate regular ID and object fields with the relationship name
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, targetEntityDef)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, targetEntityDef, fieldCasing)
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName)
+			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing)
 			allFields = append(allFields, tsRelatedField)
 
 		default:
@@ -148,25 +155,25 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 				return nil, relatedEntityDefErr
 			}
 
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, relatedEntityDef)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, relatedEntityDef, fieldCasing)
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName)
+			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing)
 			allFields = append(allFields, tsRelatedField)
 		}
 	}
 	return allFields, nil
 }
 
-func getRelatedTsFieldForMorpheEntityPrimaryID(r *registry.Registry, relationType string, relatedEntityName string, relatedEntityDef yaml.Entity) (tsdef.ObjectField, error) {
+func getRelatedTsFieldForMorpheEntityPrimaryID(r *registry.Registry, relationType string, relatedEntityName string, relatedEntityDef yaml.Entity, fieldCasing cfg.Casing) (tsdef.ObjectField, error) {
 	relatedPrimaryIDFieldName, relatedIDFieldNameErr := yamlops.GetEntityPrimaryIdentifierFieldName(relatedEntityDef)
 	if relatedIDFieldNameErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w", relatedIDFieldNameErr)
 	}
-	idFieldName := strcase.ToCamelCase(fmt.Sprintf("%s%s", relatedEntityName, relatedPrimaryIDFieldName))
+	idFieldName := fieldCasing.Apply(fmt.Sprintf("%s%s", relatedEntityName, relatedPrimaryIDFieldName))
 
 	relatedPrimaryIDFieldDef, relatedIDFieldDefErr := yamlops.GetEntityFieldDefinitionByName(relatedEntityDef, relatedPrimaryIDFieldName)
 	if relatedIDFieldDefErr != nil {
@@ -226,8 +233,8 @@ func getRelatedTsFieldForMorpheEntityOptionalObject(relationType string, related
 	return tsRelatedField
 }
 
-func getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(relationType string, relationshipName string, targetEntityName string) tsdef.ObjectField {
-	relationshipNameCamel := strcase.ToCamelCase(relationshipName)
+func getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(relationType string, relationshipName string, targetEntityName string, fieldCasing cfg.Casing) tsdef.ObjectField {
+	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 
 	if yamlops.IsRelationMany(relationType) {
 		tsRelatedField := tsdef.ObjectField{
@@ -256,12 +263,12 @@ func getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(relationType s
 	return tsRelatedField
 }
 
-func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName string, entityRelation yaml.EntityRelation) ([]tsdef.ObjectField, error) {
+func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName string, entityRelation yaml.EntityRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	if len(entityRelation.For) == 0 {
 		return nil, fmt.Errorf("polymorphic relation '%s' must have at least one entity in 'for' property", relationshipName)
 	}
 
-	relationshipNameCamel := strcase.ToCamelCase(relationshipName)
+	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 	allFields := []tsdef.ObjectField{}
 
 	// Add ID field(s)

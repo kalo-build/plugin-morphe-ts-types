@@ -18,3 +18,10 @@ output:
     name: "KA_MO_TS"
     type: "localFileSystem"
     path: "./types"
+
+configSchema:
+  fieldCasing:
+    type: string
+    description: "Field casing for generated TypeScript types. Valid values: camel (default), snake, pascal."
+    enum: ["camel", "snake", "pascal"]
+    default: "camel"

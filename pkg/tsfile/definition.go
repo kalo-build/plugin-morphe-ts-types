@@ -21,6 +21,8 @@ func ClearTsDefinitionFile(dirPath string, definitionName string) error {
 }
 
 func WriteTsDefinitionFile(dirPath string, definitionName string, definitionFileContents string) ([]byte, error) {
+	// TODO: Format via prettier?
+
 	definitionFileName := strcase.ToKebabCaseLower(definitionName)
 	definitionFilePath := filepath.Join(dirPath, definitionFileName+".d.ts")
 	if _, readErr := os.ReadDir(dirPath); readErr != nil && os.IsNotExist(readErr) {

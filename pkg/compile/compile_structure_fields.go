@@ -5,11 +5,12 @@ import (
 
 	"github.com/kalo-build/morphe-go/pkg/registry"
 	"github.com/kalo-build/morphe-go/pkg/yaml"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/tsdef"
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/typemap"
 )
 
-func getTsFieldsForMorpheStructure(r *registry.Registry, structureFields map[string]yaml.StructureField) ([]tsdef.ObjectField, error) {
+func getTsFieldsForMorpheStructure(r *registry.Registry, structureFields map[string]yaml.StructureField, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	if r == nil {
 		return nil, ErrNoRegistry
 	}
@@ -18,13 +19,18 @@ func getTsFieldsForMorpheStructure(r *registry.Registry, structureFields map[str
 	allFieldNames := core.MapKeysSorted(structureFields)
 	for _, fieldName := range allFieldNames {
 		field := structureFields[fieldName]
-		fieldType, fieldTypeErr := getTsTypeForStructureField(r.GetAllEnums(), field)
+		fieldType, fieldTypeErr := getTsTypeForStructureField(r.GetAllEnums(), field, fieldCasing)
 		if fieldTypeErr != nil {
 			return nil, fieldTypeErr
 		}
 
+		// Structure fields are required by default; wrap in TsTypeOptional for "optional" attribute
+		if hasAttribute(field.Attributes, "optional") {
+			fieldType = tsdef.TsTypeOptional{ValueType: fieldType}
+		}
+
 		allFields = append(allFields, tsdef.ObjectField{
-			Name: fieldName,
+			Name: fieldCasing.Apply(fieldName),
 			Type: fieldType,
 		})
 	}
@@ -32,8 +38,17 @@ func getTsFieldsForMorpheStructure(r *registry.Registry, structureFields map[str
 	return allFields, nil
 }
 
-func getTsTypeForStructureField(allEnums map[string]yaml.Enum, field yaml.StructureField) (tsdef.TsType, error) {
-	tsEnumType := getEnumFieldAsTsFieldType(allEnums, "", string(field.Type))
+func hasAttribute(attributes []string, target string) bool {
+	for _, attr := range attributes {
+		if attr == target {
+			return true
+		}
+	}
+	return false
+}
+
+func getTsTypeForStructureField(allEnums map[string]yaml.Enum, field yaml.StructureField, fieldCasing cfg.Casing) (tsdef.TsType, error) {
+	tsEnumType := getEnumFieldAsTsFieldType(allEnums, "", string(field.Type), fieldCasing)
 	if tsEnumType.Type != nil {
 		return tsEnumType.Type, nil
 	}

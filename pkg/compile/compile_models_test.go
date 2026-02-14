@@ -81,6 +81,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects() {
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
@@ -187,6 +188,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_EnumField() {
 	r := registry.NewRegistry()
 	r.SetEnum("Nationality", enum0)
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
@@ -257,6 +259,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_EnumField_EnumNo
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
@@ -320,6 +323,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne()
 	r.SetModel("Basic", model0)
 	r.SetModel("BasicParent", model1)
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
@@ -420,6 +424,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForMany(
 	r.SetModel("Basic", model0)
 	r.SetModel("BasicParent", model1)
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
@@ -697,6 +702,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoModelName() {
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
@@ -725,6 +731,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoFields() {
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
@@ -751,6 +758,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_NoIdentifiers() 
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
@@ -799,6 +807,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_StartHook_Succes
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
@@ -864,6 +873,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_StartHook_Failur
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
@@ -920,6 +930,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_SuccessHook_Succ
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.Nil(allTsObjectsErr)
@@ -985,6 +996,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_SuccessHook_Fail
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)
@@ -1017,6 +1029,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_FailureHook_NoMo
 
 	r := registry.NewRegistry()
 
+	modelsConfig.FieldCasing = cfg.CasingCamel
 	allTsObjects, allTsObjectsErr := compile.MorpheModelToTsObjects(modelHooks, modelsConfig, r, model0)
 
 	suite.NotNil(allTsObjectsErr)

@@ -15,8 +15,10 @@ import (
 
 func AllMorpheEntitiesToTsObjects(config MorpheCompileConfig, r *registry.Registry) (map[string][]*tsdef.Object, error) {
 	allEntityTypeDefs := map[string][]*tsdef.Object{}
+	entitiesConfig := config.MorpheEntitiesConfig
+	entitiesConfig.FieldCasing = config.FieldCasing
 	for entityName, entity := range r.GetAllEntities() {
-		entityTypes, entityTypesErr := MorpheEntityToTsObjects(config.EntityHooks, config.MorpheEntitiesConfig, r, entity)
+		entityTypes, entityTypesErr := MorpheEntityToTsObjects(config.EntityHooks, entitiesConfig, r, entity)
 		if entityTypesErr != nil {
 			return nil, entityTypesErr
 		}
@@ -58,12 +60,12 @@ func morpheEntityToTsObjectTypes(config cfg.MorpheEntitiesConfig, r *registry.Re
 		return nil, validateMorpheErr
 	}
 
-	entityType, entityTypeErr := getEntityObjectType(r, entity)
+	entityType, entityTypeErr := getEntityObjectType(r, entity, config.FieldCasing)
 	if entityTypeErr != nil {
 		return nil, entityTypeErr
 	}
 
-	allIdentifierTypes, identifierTypesErr := getAllEntityIdentifierObjectTypes(entity, entityType)
+	allIdentifierTypes, identifierTypesErr := getAllEntityIdentifierObjectTypes(entity, entityType, config.FieldCasing)
 	if identifierTypesErr != nil {
 		return nil, identifierTypesErr
 	}
@@ -75,7 +77,7 @@ func morpheEntityToTsObjectTypes(config cfg.MorpheEntitiesConfig, r *registry.Re
 	return allEntityTypes, nil
 }
 
-func getAllEntityIdentifierObjectTypes(entity yaml.Entity, entityType *tsdef.Object) ([]*tsdef.Object, error) {
+func getAllEntityIdentifierObjectTypes(entity yaml.Entity, entityType *tsdef.Object, fieldCasing cfg.Casing) ([]*tsdef.Object, error) {
 	entityIdentifiers := entity.Identifiers
 	allIdentifierNames := core.MapKeysSorted(entityIdentifiers)
 	allIdentTypes := []*tsdef.Object{}
@@ -83,7 +85,7 @@ func getAllEntityIdentifierObjectTypes(entity yaml.Entity, entityType *tsdef.Obj
 	for _, identifierName := range allIdentifierNames {
 		identifierDef := entityIdentifiers[identifierName]
 
-		allIdentFieldDefs, identFieldDefsErr := getEntityIdentifierObjectFieldSubset(*entityType, identifierName, identifierDef)
+		allIdentFieldDefs, identFieldDefsErr := getEntityIdentifierObjectFieldSubset(*entityType, identifierName, identifierDef, fieldCasing)
 		if identFieldDefsErr != nil {
 			return nil, identFieldDefsErr
 		}
@@ -97,12 +99,12 @@ func getAllEntityIdentifierObjectTypes(entity yaml.Entity, entityType *tsdef.Obj
 	return allIdentTypes, nil
 }
 
-func getEntityObjectType(r *registry.Registry, entity yaml.Entity) (*tsdef.Object, error) {
+func getEntityObjectType(r *registry.Registry, entity yaml.Entity, fieldCasing cfg.Casing) (*tsdef.Object, error) {
 	entityType := tsdef.Object{
 		Name: entity.Name,
 	}
 
-	typeFields, fieldsErr := getTsFieldsForMorpheEntity(r, entity.Fields, entity.Related)
+	typeFields, fieldsErr := getTsFieldsForMorpheEntity(r, entity.Fields, entity.Related, fieldCasing)
 	if fieldsErr != nil {
 		return nil, fieldsErr
 	}
@@ -125,12 +127,12 @@ func getEntityIdentifierObjectType(entityName string, identifierName string, all
 	return &identifierType, nil
 }
 
-func getEntityIdentifierObjectFieldSubset(entityType tsdef.Object, identifierName string, identifier yaml.EntityIdentifier) ([]tsdef.ObjectField, error) {
+func getEntityIdentifierObjectFieldSubset(entityType tsdef.Object, identifierName string, identifier yaml.EntityIdentifier, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	identifierFieldDefs := []tsdef.ObjectField{}
 	for _, fieldName := range identifier.Fields {
 		identifierFieldDef := tsdef.ObjectField{}
-		// Convert Morphe field name to camelCase for comparison with TypeScript field names
-		tsFieldName := strcase.ToCamelCase(fieldName)
+		// Convert Morphe field name to configured casing for comparison with TypeScript field names
+		tsFieldName := fieldCasing.Apply(fieldName)
 		for _, entityFieldDef := range entityType.Fields {
 			if entityFieldDef.Name != tsFieldName {
 				continue

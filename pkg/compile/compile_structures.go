@@ -10,8 +10,10 @@ import (
 
 func AllMorpheStructuresToTsObjects(config MorpheCompileConfig, r *registry.Registry) (map[string]*tsdef.Object, error) {
 	allStructureTypeDefs := map[string]*tsdef.Object{}
+	structuresConfig := config.MorpheStructuresConfig
+	structuresConfig.FieldCasing = config.FieldCasing
 	for structureName, structure := range r.GetAllStructures() {
-		structureType, structureErr := MorpheStructureToTsObject(config.StructureHooks, config.MorpheStructuresConfig, r, structure)
+		structureType, structureErr := MorpheStructureToTsObject(config.StructureHooks, structuresConfig, r, structure)
 		if structureErr != nil {
 			return nil, structureErr
 		}
@@ -55,7 +57,7 @@ func morpheStructureToTsObjectType(config cfg.MorpheStructuresConfig, r *registr
 		Name: structure.Name,
 	}
 
-	typeFields, fieldsErr := getTsFieldsForMorpheStructure(r, structure.Fields)
+	typeFields, fieldsErr := getTsFieldsForMorpheStructure(r, structure.Fields, config.FieldCasing)
 	if fieldsErr != nil {
 		return nil, fieldsErr
 	}

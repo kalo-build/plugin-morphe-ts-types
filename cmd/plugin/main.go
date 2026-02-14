@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile"
+	"github.com/kalo-build/plugin-morphe-ts-types/pkg/compile/cfg"
 )
 
 type CompileConfig struct {
@@ -73,6 +74,12 @@ func main() {
 		compileConfig.InputPath,
 		compileConfig.OutputPath,
 	)
+
+	// Parse format-specific configuration
+	if casing, ok := compileConfig.Config["fieldCasing"].(string); ok && casing != "" {
+		logInfo(compileConfig.Verbose, "Setting field casing to: %s", casing)
+		morpheConfig.FieldCasing = cfg.Casing(casing)
+	}
 
 	logInfo(compileConfig.Verbose, "Starting compilation process...")
 	compileErr := compile.MorpheToTypescript(morpheConfig)
