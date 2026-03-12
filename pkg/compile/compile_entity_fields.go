@@ -74,12 +74,17 @@ func getTsTypeForEntityField(r *registry.Registry, field yaml.EntityField) (tsde
 
 	for segmentIdx := 1; segmentIdx < len(fieldPath)-1; segmentIdx++ {
 		relatedName := fieldPath[segmentIdx]
-		_, exists := currentModel.Related[relatedName]
+		relation, exists := currentModel.Related[relatedName]
 		if !exists {
 			return nil, ErrRelatedModelNotFound(relatedName, string(field.Type))
 		}
 
-		relatedModel, relatedErr := r.GetModel(relatedName)
+		targetModelName := relatedName
+		if strings.TrimSpace(relation.Aliased) != "" {
+			targetModelName = strings.TrimSpace(relation.Aliased)
+		}
+
+		relatedModel, relatedErr := r.GetModel(targetModelName)
 		if relatedErr != nil {
 			return nil, ErrFailedToGetRelatedModel(relatedName, string(field.Type))
 		}
@@ -115,7 +120,7 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 		switch entityRelation.Type {
 		case "ForOnePoly", "ForManyPoly":
 			// For polymorphic "For" relationships, we need ID, type, and union fields
-			polyFields, polyErr := getPolymorphicForTsFieldsForEntity(r, relationshipName, entityRelation, fieldCasing)
+			polyFields, polyErr := getPolymorphicForTsFieldsForEntity(r, relationshipName, entityRelation, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
 			if polyErr != nil {
 				return nil, polyErr
 			}
@@ -134,13 +139,13 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 			}
 
 			// Generate regular ID and object fields with the relationship name
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, targetEntityDef, fieldCasing)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, targetEntityDef, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing)
+			tsRelatedField := getRelatedTsFieldForMorpheEntityObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
 			allFields = append(allFields, tsRelatedField)
 
 		default:
@@ -155,20 +160,20 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 				return nil, relatedEntityDefErr
 			}
 
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, relatedEntityDef, fieldCasing)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheEntityPrimaryID(r, entityRelation.Type, relationshipName, relatedEntityDef, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing)
+			tsRelatedField := getRelatedTsFieldForMorpheEntityObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
 			allFields = append(allFields, tsRelatedField)
 		}
 	}
 	return allFields, nil
 }
 
-func getRelatedTsFieldForMorpheEntityPrimaryID(r *registry.Registry, relationType string, relatedEntityName string, relatedEntityDef yaml.Entity, fieldCasing cfg.Casing) (tsdef.ObjectField, error) {
+func getRelatedTsFieldForMorpheEntityPrimaryID(r *registry.Registry, relationType string, relatedEntityName string, relatedEntityDef yaml.Entity, fieldCasing cfg.Casing, isOptional bool) (tsdef.ObjectField, error) {
 	relatedPrimaryIDFieldName, relatedIDFieldNameErr := yamlops.GetEntityPrimaryIdentifierFieldName(relatedEntityDef)
 	if relatedIDFieldNameErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w", relatedIDFieldNameErr)
@@ -185,85 +190,84 @@ func getRelatedTsFieldForMorpheEntityPrimaryID(r *registry.Registry, relationTyp
 	}
 
 	if yamlops.IsRelationMany(relationType) {
+		arrayType := tsdef.TsTypeArray{ValueType: idFieldType}
 		tsIDField := tsdef.ObjectField{
 			Name: idFieldName + "s",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: idFieldType,
-				},
-			},
+			Type: arrayType,
+		}
+		if isOptional {
+			tsIDField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
 		}
 		return tsIDField, nil
 	}
 
 	tsIDField := tsdef.ObjectField{
 		Name: idFieldName,
-		Type: tsdef.TsTypeOptional{
-			ValueType: idFieldType,
-		},
+		Type: idFieldType,
+	}
+	if isOptional {
+		tsIDField.Type = tsdef.TsTypeOptional{ValueType: idFieldType}
 	}
 	return tsIDField, nil
 }
 
-func getRelatedTsFieldForMorpheEntityOptionalObject(relationType string, relatedEntityName string) tsdef.ObjectField {
+func getRelatedTsFieldForMorpheEntityObject(relationType string, relatedEntityName string, isOptional bool) tsdef.ObjectField {
+	objType := tsdef.TsTypeObject{
+		ModulePath: "./" + strcase.ToKebabCaseLower(relatedEntityName),
+		Name:       relatedEntityName,
+	}
 	if yamlops.IsRelationMany(relationType) {
+		arrayType := tsdef.TsTypeArray{ValueType: objType}
 		tsRelatedField := tsdef.ObjectField{
 			Name: relatedEntityName + "s",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: tsdef.TsTypeObject{
-						ModulePath: "./" + strcase.ToKebabCaseLower(relatedEntityName),
-						Name:       relatedEntityName,
-					},
-				},
-			},
+			Type: arrayType,
+		}
+		if isOptional {
+			tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
 		}
 		return tsRelatedField
 	}
 
 	tsRelatedField := tsdef.ObjectField{
 		Name: relatedEntityName,
-		Type: tsdef.TsTypeOptional{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./" + strcase.ToKebabCaseLower(relatedEntityName),
-				Name:       relatedEntityName,
-			},
-		},
+		Type: objType,
+	}
+	if isOptional {
+		tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: objType}
 	}
 	return tsRelatedField
 }
 
-func getRelatedTsFieldForMorpheEntityOptionalObjectWithTargetName(relationType string, relationshipName string, targetEntityName string, fieldCasing cfg.Casing) tsdef.ObjectField {
+func getRelatedTsFieldForMorpheEntityObjectWithTargetName(relationType string, relationshipName string, targetEntityName string, fieldCasing cfg.Casing, isOptional bool) tsdef.ObjectField {
 	relationshipNameCamel := fieldCasing.Apply(relationshipName)
+	objType := tsdef.TsTypeObject{
+		ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
+		Name:       targetEntityName,
+	}
 
 	if yamlops.IsRelationMany(relationType) {
+		arrayType := tsdef.TsTypeArray{ValueType: objType}
 		tsRelatedField := tsdef.ObjectField{
 			Name: relationshipNameCamel + "s",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: tsdef.TsTypeObject{
-						ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
-						Name:       targetEntityName,
-					},
-				},
-			},
+			Type: arrayType,
+		}
+		if isOptional {
+			tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
 		}
 		return tsRelatedField
 	}
 
 	tsRelatedField := tsdef.ObjectField{
 		Name: relationshipNameCamel,
-		Type: tsdef.TsTypeOptional{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
-				Name:       targetEntityName,
-			},
-		},
+		Type: objType,
+	}
+	if isOptional {
+		tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: objType}
 	}
 	return tsRelatedField
 }
 
-func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName string, entityRelation yaml.EntityRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
+func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName string, entityRelation yaml.EntityRelation, fieldCasing cfg.Casing, isOptional bool) ([]tsdef.ObjectField, error) {
 	if len(entityRelation.For) == 0 {
 		return nil, fmt.Errorf("polymorphic relation '%s' must have at least one entity in 'for' property", relationshipName)
 	}
@@ -271,31 +275,31 @@ func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName s
 	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 	allFields := []tsdef.ObjectField{}
 
+	wrapOptional := func(t tsdef.TsType) tsdef.TsType {
+		if isOptional {
+			return tsdef.TsTypeOptional{ValueType: t}
+		}
+		return t
+	}
+
 	// Add ID field(s)
 	if yamlops.IsRelationMany(entityRelation.Type) {
+		arrayType := tsdef.TsTypeArray{ValueType: tsdef.TsTypeString}
 		allFields = append(allFields, tsdef.ObjectField{
 			Name: relationshipNameCamel + "IDs",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: tsdef.TsTypeString,
-				},
-			},
+			Type: wrapOptional(arrayType),
 		})
 	} else {
 		allFields = append(allFields, tsdef.ObjectField{
 			Name: relationshipNameCamel + "ID",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeString,
-			},
+			Type: wrapOptional(tsdef.TsTypeString),
 		})
 	}
 
 	// Add type field
 	allFields = append(allFields, tsdef.ObjectField{
 		Name: relationshipNameCamel + "Type",
-		Type: tsdef.TsTypeOptional{
-			ValueType: tsdef.TsTypeString,
-		},
+		Type: wrapOptional(tsdef.TsTypeString),
 	})
 
 	// Add union type field
@@ -307,25 +311,17 @@ func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName s
 		})
 	}
 
+	unionType := tsdef.TsTypeUnion{Types: unionTypes}
 	if yamlops.IsRelationMany(entityRelation.Type) {
+		arrayType := tsdef.TsTypeArray{ValueType: unionType}
 		allFields = append(allFields, tsdef.ObjectField{
 			Name: relationshipNameCamel + "s",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: tsdef.TsTypeUnion{
-						Types: unionTypes,
-					},
-				},
-			},
+			Type: wrapOptional(arrayType),
 		})
 	} else {
 		allFields = append(allFields, tsdef.ObjectField{
 			Name: relationshipNameCamel,
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeUnion{
-					Types: unionTypes,
-				},
-			},
+			Type: wrapOptional(unionType),
 		})
 	}
 

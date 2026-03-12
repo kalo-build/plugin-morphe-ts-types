@@ -210,6 +210,120 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects() {
 	suite.Equal(tsField10.Type, tsdef.TsTypeString)
 }
 
+func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_AliasedFieldPathTraversal() {
+	entityHooks := hook.CompileMorpheEntity{}
+	entitiesConfig := cfg.MorpheEntitiesConfig{}
+
+	taskModel := yaml.Model{
+		Name: "Task",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeUUID,
+			},
+			"Title": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"Assignee": {
+				Type:    "ForOne",
+				Aliased: "Membership",
+			},
+		},
+	}
+
+	membershipModel := yaml.Model{
+		Name: "Membership",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeUUID,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{
+			"User": {
+				Type: "ForOne",
+			},
+		},
+	}
+
+	userModel := yaml.Model{
+		Name: "User",
+		Fields: map[string]yaml.ModelField{
+			"ID": {
+				Type: yaml.ModelFieldTypeUUID,
+			},
+			"FirstName": {
+				Type: yaml.ModelFieldTypeString,
+			},
+		},
+		Identifiers: map[string]yaml.ModelIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.ModelRelation{},
+	}
+
+	taskEntity := yaml.Entity{
+		Name: "Task",
+		Fields: map[string]yaml.EntityField{
+			"ID": {
+				Type: "Task.ID",
+			},
+			"Title": {
+				Type: "Task.Title",
+			},
+			"AssigneeName": {
+				Type: "Task.Assignee.User.FirstName",
+			},
+		},
+		Identifiers: map[string]yaml.EntityIdentifier{
+			"primary": {
+				Fields: []string{"ID"},
+			},
+		},
+		Related: map[string]yaml.EntityRelation{},
+	}
+
+	r := registry.NewRegistry()
+	r.SetModel("Task", taskModel)
+	r.SetModel("Membership", membershipModel)
+	r.SetModel("User", userModel)
+
+	allTsObjects, tsObjectErr := compile.MorpheEntityToTsObjects(entityHooks, entitiesConfig, r, taskEntity)
+
+	suite.Nil(tsObjectErr)
+	suite.Len(allTsObjects, 2)
+
+	tsObject0 := allTsObjects[0]
+	suite.Equal(tsObject0.Name, "Task")
+
+	tsFields0 := tsObject0.Fields
+	suite.Len(tsFields0, 3)
+
+	tsField00 := tsFields0[0]
+	suite.Equal(tsField00.Name, "assigneeName")
+	suite.Equal(tsField00.Type, tsdef.TsTypeString)
+
+	tsField01 := tsFields0[1]
+	suite.Equal(tsField01.Name, "id")
+	suite.Equal(tsField01.Type, tsdef.TsTypeString)
+
+	tsField02 := tsFields0[2]
+	suite.Equal(tsField02.Name, "title")
+	suite.Equal(tsField02.Type, tsdef.TsTypeString)
+}
+
 func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_NoEntityName() {
 	entityHooks := hook.CompileMorpheEntity{}
 	entitiesConfig := cfg.MorpheEntitiesConfig{}
