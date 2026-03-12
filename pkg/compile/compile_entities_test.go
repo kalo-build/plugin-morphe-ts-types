@@ -699,17 +699,13 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForOn
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicParentID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "basicParent")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeObject{
-			ModulePath: "./basic-parent",
-			Name:       "BasicParent",
-		},
+	suite.Equal(tsField03.Type, tsdef.TsTypeObject{
+		ModulePath: "./basic-parent",
+		Name:       "BasicParent",
 	})
 
 	tsObject1 := allTsObjects[1]
@@ -841,20 +837,16 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForMa
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicParentIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "basicParents")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./basic-parent",
-				Name:       "BasicParent",
-			},
+	suite.Equal(tsField03.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./basic-parent",
+			Name:       "BasicParent",
 		},
 	})
 
@@ -987,17 +979,13 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasOn
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "basic")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeObject{
-			ModulePath: "./basic",
-			Name:       "Basic",
-		},
+	suite.Equal(tsField03.Type, tsdef.TsTypeObject{
+		ModulePath: "./basic",
+		Name:       "Basic",
 	})
 
 	tsObject1 := allTsObjects[1]
@@ -1129,20 +1117,16 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasMa
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "basics")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./basic",
-				Name:       "Basic",
-			},
+	suite.Equal(tsField03.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./basic",
+			Name:       "Basic",
 		},
 	})
 
@@ -1598,29 +1582,23 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForOn
 	// ForOnePoly generates ID, Type, and union fields
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "commentableID")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeString,
-	})
+	suite.Equal(tsField03.Type, tsdef.TsTypeString)
 
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "commentableType")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeString,
-	})
+	suite.Equal(tsField04.Type, tsdef.TsTypeString)
 
 	tsField05 := tsFields0[5]
 	suite.Equal(tsField05.Name, "commentable")
-	suite.Equal(tsField05.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeUnion{
-			Types: []tsdef.TsType{
-				tsdef.TsTypeObject{
-					ModulePath: "./person",
-					Name:       "Person",
-				},
-				tsdef.TsTypeObject{
-					ModulePath: "./company",
-					Name:       "Company",
-				},
+	suite.Equal(tsField05.Type, tsdef.TsTypeUnion{
+		Types: []tsdef.TsType{
+			tsdef.TsTypeObject{
+				ModulePath: "./person",
+				Name:       "Person",
+			},
+			tsdef.TsTypeObject{
+				ModulePath: "./company",
+				Name:       "Company",
 			},
 		},
 	})
@@ -1791,32 +1769,26 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForMa
 	// ForManyPoly generates IDs, Type, and union array fields
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "taggableIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeString,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeString,
 	})
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "taggableType")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeString,
-	})
+	suite.Equal(tsField03.Type, tsdef.TsTypeString)
 
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "taggables")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeUnion{
-				Types: []tsdef.TsType{
-					tsdef.TsTypeObject{
-						ModulePath: "./person",
-						Name:       "Person",
-					},
-					tsdef.TsTypeObject{
-						ModulePath: "./company",
-						Name:       "Company",
-					},
+	suite.Equal(tsField04.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeUnion{
+			Types: []tsdef.TsType{
+				tsdef.TsTypeObject{
+					ModulePath: "./person",
+					Name:       "Person",
+				},
+				tsdef.TsTypeObject{
+					ModulePath: "./company",
+					Name:       "Company",
 				},
 			},
 		},
@@ -1972,17 +1944,13 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasOn
 	// HasOnePoly generates regular ID and object fields using relationship name
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "commentID")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField03.Type, tsdef.TsTypeNumber)
 
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "comment")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeObject{
-			ModulePath: "./comment",
-			Name:       "Comment",
-		},
+	suite.Equal(tsField04.Type, tsdef.TsTypeObject{
+		ModulePath: "./comment",
+		Name:       "Comment",
 	})
 
 	tsObject1 := allTsObjects[1]
@@ -2135,20 +2103,16 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasMa
 	// HasManyPoly generates regular ID array and object array fields using relationship name
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "tagIDs")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField03.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "tags")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./tag",
-				Name:       "Tag",
-			},
+	suite.Equal(tsField04.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./tag",
+			Name:       "Tag",
 		},
 	})
 
@@ -2288,33 +2252,25 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_ForOn
 	// PersonalContact relationship (aliased to Contact)
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "personalContactID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "personalContact")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeObject{
-			ModulePath: "./contact",
-			Name:       "Contact",
-		},
+	suite.Equal(tsField03.Type, tsdef.TsTypeObject{
+		ModulePath: "./contact",
+		Name:       "Contact",
 	})
 
 	// WorkContact relationship (also aliased to Contact)
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "workContactID")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField04.Type, tsdef.TsTypeNumber)
 
 	tsField05 := tsFields0[5]
 	suite.Equal(tsField05.Name, "workContact")
-	suite.Equal(tsField05.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeObject{
-			ModulePath: "./contact",
-			Name:       "Contact",
-		},
+	suite.Equal(tsField05.Type, tsdef.TsTypeObject{
+		ModulePath: "./contact",
+		Name:       "Contact",
 	})
 
 	tsObject1 := allTsObjects[1]
@@ -2454,40 +2410,32 @@ func (suite *CompileEntitiesTestSuite) TestMorpheEntityToTsObjects_Related_HasMa
 	// PersonalProject relationship (aliased to Project)
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "personalProjectIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "personalProjects")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./project",
-				Name:       "Project",
-			},
+	suite.Equal(tsField03.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./project",
+			Name:       "Project",
 		},
 	})
 
 	// WorkProject relationship (also aliased to Project)
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "workProjectIDs")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField04.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField05 := tsFields0[5]
 	suite.Equal(tsField05.Name, "workProjects")
-	suite.Equal(tsField05.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeObject{
-				ModulePath: "./project",
-				Name:       "Project",
-			},
+	suite.Equal(tsField05.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeObject{
+			ModulePath: "./project",
+			Name:       "Project",
 		},
 	})
 

@@ -4,8 +4,8 @@ export type Company = {
 	id: number
 	name: string
 	taxID: string
-	personIDs?: number[]
-	persons?: Person[]
+	personIDs: number[]
+	persons: Person[]
 }
 
 export type CompanyIDPrimary = {
