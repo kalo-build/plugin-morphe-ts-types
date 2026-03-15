@@ -9,15 +9,15 @@ export type Person = {
 	id: number
 	lastName: string
 	nationality: Nationality
-	companyID?: number
+	companyID: number
 	company?: Company
-	contactInfoID?: number
+	contactInfoID: number
 	contactInfo?: ContactInfo
-	noteIDs?: number[]
+	noteIDs: number[]
 	notes?: Comment[]
-	personalContactID?: number
+	personalContactID: number
 	personalContact?: Contact
-	workContactID?: number
+	workContactID: number
 	workContact?: Contact
 }
 

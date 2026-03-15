@@ -1,12 +1,17 @@
 package compile
 
-import "github.com/kalo-build/morphe-go/pkg/registry"
+import (
+	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/morphe-go/pkg/registry"
+)
 
 func MorpheToTypescript(config MorpheCompileConfig) error {
 	r, rErr := registry.LoadMorpheRegistry(config.RegistryHooks, config.MorpheLoadRegistryConfig)
 	if rErr != nil {
 		return rErr
 	}
+
+	var barrelCategories []BarrelFileCategory
 
 	hasEnums := r.HasEnums()
 	if hasEnums {
@@ -18,6 +23,13 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 		_, writeAllEnumsErr := WriteAllEnumDefinitions(config, allEnumDefs)
 		if writeAllEnumsErr != nil {
 			return writeAllEnumsErr
+		}
+
+		if config.GenerateBarrelFiles {
+			barrelCategories = append(barrelCategories, BarrelFileCategory{
+				DirPath:         config.EnumWriter.(*MorpheEnumFileWriter).TargetDirPath,
+				DefinitionNames: core.MapKeysSorted(allEnumDefs),
+			})
 		}
 	}
 
@@ -32,6 +44,13 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 		if writeAllModelsErr != nil {
 			return writeAllModelsErr
 		}
+
+		if config.GenerateBarrelFiles {
+			barrelCategories = append(barrelCategories, BarrelFileCategory{
+				DirPath:         config.ModelWriter.(*MorpheObjectFileWriter).TargetDirPath,
+				DefinitionNames: core.MapKeysSorted(allModelObjectDefs),
+			})
+		}
 	}
 
 	hasStructures := r.HasStructures()
@@ -45,6 +64,13 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 		if writeAllStructuresErr != nil {
 			return writeAllStructuresErr
 		}
+
+		if config.GenerateBarrelFiles {
+			barrelCategories = append(barrelCategories, BarrelFileCategory{
+				DirPath:         config.StructureWriter.(*MorpheObjectFileWriter).TargetDirPath,
+				DefinitionNames: core.MapKeysSorted(allStructureObjectDefs),
+			})
+		}
 	}
 
 	hasEntities := r.HasEntities()
@@ -57,6 +83,19 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 		_, writeAllEntitiesErr := WriteAllEntityObjectDefinitions(config, allEntityObjectDefs)
 		if writeAllEntitiesErr != nil {
 			return writeAllEntitiesErr
+		}
+
+		if config.GenerateBarrelFiles {
+			barrelCategories = append(barrelCategories, BarrelFileCategory{
+				DirPath:         config.EntityWriter.(*MorpheObjectFileWriter).TargetDirPath,
+				DefinitionNames: core.MapKeysSorted(allEntityObjectDefs),
+			})
+		}
+	}
+
+	if config.GenerateBarrelFiles && len(barrelCategories) > 0 {
+		if err := WriteBarrelFiles(barrelCategories); err != nil {
+			return err
 		}
 	}
 

@@ -2,6 +2,7 @@ package compile
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/kalo-build/clone"
 	"github.com/kalo-build/go-util/core"
@@ -160,8 +161,21 @@ func getModelIdentifierObjectType(modelName string, identifierName string, allId
 func getModelIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName string, identifier yaml.ModelIdentifier, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
 	identifierFieldDefs := []tsdef.ObjectField{}
 	for _, fieldName := range identifier.Fields {
+		if strings.HasPrefix(fieldName, "rel:") {
+			relationName := strings.TrimPrefix(fieldName, "rel:")
+			idFieldName := fieldCasing.Apply(relationName + "ID")
+			idField, found := findObjectFieldByName(modelType.Fields, idFieldName)
+			if !found {
+				return nil, fmt.Errorf("identifier %s references relation '%s' but field '%s' not found on type", identifierName, relationName, idFieldName)
+			}
+			identifierFieldDefs = append(identifierFieldDefs, idField)
+			typeFieldName := fieldCasing.Apply(relationName + "Type")
+			if typeField, hasType := findObjectFieldByName(modelType.Fields, typeFieldName); hasType {
+				identifierFieldDefs = append(identifierFieldDefs, typeField)
+			}
+			continue
+		}
 		identifierFieldDef := tsdef.ObjectField{}
-		// Convert Morphe field name using configured casing for comparison with TypeScript field names
 		tsFieldName := fieldCasing.Apply(fieldName)
 		for _, modelFieldDef := range modelType.Fields {
 			if modelFieldDef.Name != tsFieldName {
@@ -178,6 +192,15 @@ func getModelIdentifierObjectFieldSubset(modelType tsdef.Object, identifierName 
 		identifierFieldDefs = append(identifierFieldDefs, identifierFieldDef)
 	}
 	return identifierFieldDefs, nil
+}
+
+func findObjectFieldByName(fields []tsdef.ObjectField, name string) (tsdef.ObjectField, bool) {
+	for _, field := range fields {
+		if field.Name == name {
+			return tsdef.ObjectField{Name: field.Name, Type: field.Type}, true
+		}
+	}
+	return tsdef.ObjectField{}, false
 }
 
 func getImportsForObjectFields(allFields []tsdef.ObjectField) ([]tsdef.ObjectImport, error) {

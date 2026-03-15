@@ -57,6 +57,8 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 			RegistryEntitiesDirPath:   suite.EntitiesDirPath,
 		},
 
+		GenerateBarrelFiles: true,
+
 		MorpheEnumsConfig: cfg.MorpheEnumsConfig{},
 		EnumWriter: &compile.MorpheEnumFileWriter{
 			TargetDirPath: workingDirPath + "/enums",

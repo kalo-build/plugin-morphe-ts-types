@@ -77,15 +77,13 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 		// Handle different relationship types
 		switch modelRelation.Type {
 		case "ForOnePoly", "ForManyPoly":
-			// For polymorphic "For" relationships, we need ID, type, and union fields
-			polyFields, polyErr := getPolymorphicForTsFields(r, relationshipName, modelRelation, fieldCasing)
+			polyFields, polyErr := getPolymorphicForTsFields(r, relationshipName, modelRelation, fieldCasing, hasAttribute(modelRelation.Attributes, "optional"))
 			if polyErr != nil {
 				return nil, polyErr
 			}
 			allFields = append(allFields, polyFields...)
 
 		case "HasOnePoly", "HasManyPoly":
-			// For polymorphic "Has" relationships, use the aliased model if provided, otherwise use relationship name
 			targetModelName := relationshipName
 			if modelRelation.Aliased != "" {
 				targetModelName = modelRelation.Aliased
@@ -96,8 +94,7 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 				return nil, targetModelDefErr
 			}
 
-			// Generate regular ID and object fields with the relationship name
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef, fieldCasing)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef, fieldCasing, hasAttribute(modelRelation.Attributes, "optional"))
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
@@ -107,7 +104,6 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 			allFields = append(allFields, tsRelatedField)
 
 		default:
-			// Regular relationships
 			targetModelName := relationshipName
 			if modelRelation.Aliased != "" {
 				targetModelName = modelRelation.Aliased
@@ -118,7 +114,7 @@ func getRelatedTsFieldsForMorpheModel(r *registry.Registry, modelRelations map[s
 				return nil, targetModelDefErr
 			}
 
-			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef, fieldCasing)
+			tsIDField, tsIDErr := getRelatedTsFieldForMorpheModelPrimaryID(modelRelation.Type, relationshipName, targetModelDef, fieldCasing, hasAttribute(modelRelation.Attributes, "optional"))
 			if tsIDErr != nil {
 				return nil, tsIDErr
 			}
@@ -152,7 +148,7 @@ func getEnumFieldAsTsFieldType(allEnums map[string]yaml.Enum, fieldName string, 
 	return tsField
 }
 
-func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelName string, relatedModelDef yaml.Model, fieldCasing cfg.Casing) (tsdef.ObjectField, error) {
+func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelName string, relatedModelDef yaml.Model, fieldCasing cfg.Casing, isOptional bool) (tsdef.ObjectField, error) {
 	relatedPrimaryIDFieldName, relatedIDFieldNameErr := yamlops.GetModelPrimaryIdentifierFieldName(relatedModelDef)
 	if relatedIDFieldNameErr != nil {
 		return tsdef.ObjectField{}, fmt.Errorf("related %w", relatedIDFieldNameErr)
@@ -169,22 +165,23 @@ func getRelatedTsFieldForMorpheModelPrimaryID(relationType string, relatedModelN
 	}
 
 	if yamlops.IsRelationMany(relationType) {
+		arrayType := tsdef.TsTypeArray{ValueType: idFieldType}
 		tsIDField := tsdef.ObjectField{
 			Name: idFieldName + "s",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: idFieldType,
-				},
-			},
+			Type: tsdef.TsType(arrayType),
+		}
+		if isOptional {
+			tsIDField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
 		}
 		return tsIDField, nil
 	}
 
 	tsIDField := tsdef.ObjectField{
 		Name: idFieldName,
-		Type: tsdef.TsTypeOptional{
-			ValueType: idFieldType,
-		},
+		Type: tsdef.TsType(idFieldType),
+	}
+	if isOptional {
+		tsIDField.Type = tsdef.TsTypeOptional{ValueType: idFieldType}
 	}
 	return tsIDField, nil
 }
@@ -247,7 +244,7 @@ func getRelatedTsFieldForMorpheModelOptionalObjectWithTargetName(relationType st
 	return tsRelatedField
 }
 
-func getPolymorphicForTsFields(r *registry.Registry, relationshipName string, modelRelation yaml.ModelRelation, fieldCasing cfg.Casing) ([]tsdef.ObjectField, error) {
+func getPolymorphicForTsFields(r *registry.Registry, relationshipName string, modelRelation yaml.ModelRelation, fieldCasing cfg.Casing, isOptional bool) ([]tsdef.ObjectField, error) {
 	if len(modelRelation.For) == 0 {
 		return nil, fmt.Errorf("polymorphic relation '%s' must have at least one model in 'for' property", relationshipName)
 	}
@@ -255,32 +252,35 @@ func getPolymorphicForTsFields(r *registry.Registry, relationshipName string, mo
 	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 	allFields := []tsdef.ObjectField{}
 
-	// Add ID field(s)
 	if yamlops.IsRelationMany(modelRelation.Type) {
-		allFields = append(allFields, tsdef.ObjectField{
+		arrayType := tsdef.TsTypeArray{ValueType: tsdef.TsTypeString}
+		idField := tsdef.ObjectField{
 			Name: relationshipNameCamel + "IDs",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeArray{
-					ValueType: tsdef.TsTypeString,
-				},
-			},
-		})
+			Type: tsdef.TsType(arrayType),
+		}
+		if isOptional {
+			idField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
+		}
+		allFields = append(allFields, idField)
 	} else {
-		allFields = append(allFields, tsdef.ObjectField{
+		idField := tsdef.ObjectField{
 			Name: relationshipNameCamel + "ID",
-			Type: tsdef.TsTypeOptional{
-				ValueType: tsdef.TsTypeString,
-			},
-		})
+			Type: tsdef.TsType(tsdef.TsTypeString),
+		}
+		if isOptional {
+			idField.Type = tsdef.TsTypeOptional{ValueType: tsdef.TsTypeString}
+		}
+		allFields = append(allFields, idField)
 	}
 
-	// Add type field
-	allFields = append(allFields, tsdef.ObjectField{
+	typeField := tsdef.ObjectField{
 		Name: relationshipNameCamel + "Type",
-		Type: tsdef.TsTypeOptional{
-			ValueType: tsdef.TsTypeString,
-		},
-	})
+		Type: tsdef.TsType(tsdef.TsTypeString),
+	}
+	if isOptional {
+		typeField.Type = tsdef.TsTypeOptional{ValueType: tsdef.TsTypeString}
+	}
+	allFields = append(allFields, typeField)
 
 	// Add union type field
 	unionTypes := []tsdef.TsType{}

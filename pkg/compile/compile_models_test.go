@@ -345,9 +345,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne()
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicParentID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "basicParent")
@@ -446,10 +444,8 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForMany(
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicParentIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField03 := tsFields0[3]
@@ -550,9 +546,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasOne()
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "basic")
@@ -650,10 +644,8 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasMany(
 
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "basicIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField03 := tsFields0[3]
@@ -1131,19 +1123,15 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOnePo
 	suite.Equal(tsField02.Name, "id")
 	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
-	// Polymorphic ID field
+	// Polymorphic ID field (non-optional: relation has no optional attribute)
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "commentableID")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeString,
-	})
+	suite.Equal(tsField03.Type, tsdef.TsTypeString)
 
-	// Polymorphic type field
+	// Polymorphic type field (non-optional: relation has no optional attribute)
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "commentableType")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeString,
-	})
+	suite.Equal(tsField04.Type, tsdef.TsTypeString)
 
 	// Polymorphic object field (union type)
 	tsField05 := tsFields0[5]
@@ -1268,21 +1256,17 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForManyP
 	suite.Equal(tsField02.Name, "name")
 	suite.Equal(tsField02.Type, tsdef.TsTypeString)
 
-	// Polymorphic ID field
+	// Polymorphic ID field (non-optional: relation has no optional attribute)
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "taggableIDs")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeString,
-		},
-	})
-
-	// Polymorphic type field - not present for ForManyPoly?
-	tsField04 := tsFields0[4]
-	suite.Equal(tsField04.Name, "taggableType")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
+	suite.Equal(tsField03.Type, tsdef.TsTypeArray{
 		ValueType: tsdef.TsTypeString,
 	})
+
+	// Polymorphic type field (non-optional: relation has no optional attribute)
+	tsField04 := tsFields0[4]
+	suite.Equal(tsField04.Name, "taggableType")
+	suite.Equal(tsField04.Type, tsdef.TsTypeString)
 
 	// Polymorphic object field (union type array)
 	tsField05 := tsFields0[5]
@@ -1401,9 +1385,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasOnePo
 	// Has* polymorphic generates regular ID and struct fields
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "commentID")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField03.Type, tsdef.TsTypeNumber)
 
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "comment")
@@ -1511,10 +1493,8 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasManyP
 	// Has* polymorphic generates regular ID array and struct array fields
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "tagIDs")
-	suite.Equal(tsField03.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField03.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField04 := tsFields0[4]
@@ -1618,9 +1598,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasOnePo
 	// Has* polymorphic generates regular ID and struct fields using relationship name
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "commentID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "comment")
@@ -1721,10 +1699,8 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_HasManyP
 	// Has* polymorphic generates regular ID array and struct array fields using relationship name
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "tagIDs")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeArray{
-			ValueType: tsdef.TsTypeNumber,
-		},
+	suite.Equal(tsField02.Type, tsdef.TsTypeArray{
+		ValueType: tsdef.TsTypeNumber,
 	})
 
 	tsField03 := tsFields0[3]
@@ -1828,9 +1804,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne_A
 	// PersonalContact relationship
 	tsField02 := tsFields0[2]
 	suite.Equal(tsField02.Name, "personalContactID")
-	suite.Equal(tsField02.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField02.Type, tsdef.TsTypeNumber)
 
 	tsField03 := tsFields0[3]
 	suite.Equal(tsField03.Name, "personalContact")
@@ -1844,9 +1818,7 @@ func (suite *CompileModelsTestSuite) TestMorpheModelToTsObjects_Related_ForOne_A
 	// WorkContact relationship
 	tsField04 := tsFields0[4]
 	suite.Equal(tsField04.Name, "workContactID")
-	suite.Equal(tsField04.Type, tsdef.TsTypeOptional{
-		ValueType: tsdef.TsTypeNumber,
-	})
+	suite.Equal(tsField04.Type, tsdef.TsTypeNumber)
 
 	tsField05 := tsFields0[5]
 	suite.Equal(tsField05.Name, "workContact")

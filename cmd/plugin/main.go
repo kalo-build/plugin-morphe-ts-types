@@ -75,10 +75,14 @@ func main() {
 		compileConfig.OutputPath,
 	)
 
-	// Parse format-specific configuration
 	if casing, ok := compileConfig.Config["fieldCasing"].(string); ok && casing != "" {
 		logInfo(compileConfig.Verbose, "Setting field casing to: %s", casing)
 		morpheConfig.FieldCasing = cfg.Casing(casing)
+	}
+
+	if generateBarrel, ok := compileConfig.Config["generateBarrelFiles"].(bool); ok && generateBarrel {
+		logInfo(compileConfig.Verbose, "Barrel file generation enabled")
+		morpheConfig.GenerateBarrelFiles = true
 	}
 
 	logInfo(compileConfig.Verbose, "Starting compilation process...")

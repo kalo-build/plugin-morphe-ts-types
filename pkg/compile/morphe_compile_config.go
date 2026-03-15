@@ -17,9 +17,8 @@ type MorpheCompileConfig struct {
 	cfg.MorpheStructuresConfig
 	cfg.MorpheEntitiesConfig
 
-	// FieldCasing specifies the casing for field names in generated types.
-	// Valid values: "camel" (default), "snake", "pascal"
-	FieldCasing cfg.Casing
+	FieldCasing        cfg.Casing
+	GenerateBarrelFiles bool
 
 	RegistryHooks r.LoadMorpheRegistryHooks
 

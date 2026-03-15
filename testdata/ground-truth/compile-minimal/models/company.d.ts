@@ -6,13 +6,13 @@ export type Company = {
 	id: number
 	name: string
 	taxID: string
-	mailingContactID?: number
+	mailingContactID: number
 	mailingContact?: Contact
-	mainContactID?: number
+	mainContactID: number
 	mainContact?: Contact
-	noteIDs?: number[]
+	noteIDs: number[]
 	notes?: Comment[]
-	personIDs?: number[]
+	personIDs: number[]
 	persons?: Person[]
 }
 

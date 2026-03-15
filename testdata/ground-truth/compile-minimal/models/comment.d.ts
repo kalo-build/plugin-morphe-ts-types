@@ -4,8 +4,8 @@ import { Person } from "./person"
 export type Comment = {
 	id: number
 	text: string
-	commentableID?: string
-	commentableType?: string
+	commentableID: string
+	commentableType: string
 	commentable?: Person | Company
 }
 

@@ -1,0 +1,5 @@
+export * from './comment'
+export * from './company'
+export * from './contact'
+export * from './contact-info'
+export * from './person'
