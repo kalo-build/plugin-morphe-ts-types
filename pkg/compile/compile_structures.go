@@ -48,7 +48,7 @@ func morpheStructureToTsObjectType(config cfg.MorpheStructuresConfig, r *registr
 	if validateConfigErr != nil {
 		return nil, validateConfigErr
 	}
-	validateMorpheErr := structure.Validate(r.GetAllEnums())
+	validateMorpheErr := structure.Validate(r.GetAllEnums(), r.GetAllStructures())
 	if validateMorpheErr != nil {
 		return nil, validateMorpheErr
 	}

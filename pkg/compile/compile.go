@@ -94,7 +94,7 @@ func MorpheToTypescript(config MorpheCompileConfig) error {
 	}
 
 	if config.GenerateBarrelFiles && len(barrelCategories) > 0 {
-		if err := WriteBarrelFiles(barrelCategories); err != nil {
+		if err := WriteBarrelFiles(config.OutputDirPath, barrelCategories); err != nil {
 			return err
 		}
 	}

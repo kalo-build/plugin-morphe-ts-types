@@ -159,3 +159,54 @@ func (suite *CompileStructuresTestSuite) TestMorpheStructureToTsObject_StartHook
 	suite.ErrorContains(tsObjectErr, "compile structure start hook error")
 	suite.Nil(tsObject)
 }
+
+func (suite *CompileStructuresTestSuite) TestMorpheStructureToTsObject_StructureComposition() {
+	structureHooks := hook.CompileMorpheStructure{}
+	structuresConfig := cfg.MorpheStructuresConfig{}
+
+	lineItemStructure := yaml.Structure{
+		Name: "InvoiceLineItem",
+		Fields: map[string]yaml.StructureField{
+			"Description": {Type: yaml.StructureFieldTypeString},
+			"Quantity":   {Type: yaml.StructureFieldTypeInteger},
+			"UnitAmount": {Type: yaml.StructureFieldTypeInteger},
+		},
+	}
+
+	invoiceStructure := yaml.Structure{
+		Name: "Invoice",
+		Fields: map[string]yaml.StructureField{
+			"ID": {Type: yaml.StructureFieldTypeString},
+			"LineItem": {
+				Type:       yaml.StructureFieldType("InvoiceLineItem"),
+				Attributes: []string{"optional"},
+			},
+		},
+	}
+
+	r := registry.NewRegistry()
+	r.SetStructure("InvoiceLineItem", lineItemStructure)
+	r.SetStructure("Invoice", invoiceStructure)
+
+	tsObject, tsObjectErr := compile.MorpheStructureToTsObject(structureHooks, structuresConfig, r, invoiceStructure)
+
+	suite.Nil(tsObjectErr)
+	suite.NotNil(tsObject)
+	suite.Equal(tsObject.Name, "Invoice")
+
+	suite.Len(tsObject.Fields, 2)
+
+	idField := tsObject.Fields[0]
+	suite.Equal(idField.Name, "id")
+	suite.Equal(idField.Type, tsdef.TsTypeString)
+
+	lineItemField := tsObject.Fields[1]
+	suite.Equal(lineItemField.Name, "lineItem")
+	suite.True(lineItemField.Type.IsOptional())
+	refType, ok := lineItemField.Type.(tsdef.TsTypeOptional)
+	suite.True(ok)
+	objType, ok := refType.ValueType.(tsdef.TsTypeObject)
+	suite.True(ok)
+	suite.Equal(objType.Name, "InvoiceLineItem")
+	suite.Equal(objType.ModulePath, "./invoice-line-item")
+}

@@ -31,7 +31,7 @@ func (suite *BarrelFilesTestSuite) TearDownTest() {
 func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_SingleCategory() {
 	modelsDir := filepath.Join(suite.outputDir, "models")
 
-	err := compile.WriteBarrelFiles([]compile.BarrelFileCategory{
+	err := compile.WriteBarrelFiles(suite.outputDir, []compile.BarrelFileCategory{
 		{
 			DirPath:         modelsDir,
 			DefinitionNames: []string{"User", "Organization"},
@@ -45,6 +45,10 @@ func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_SingleCategory() {
 
 	expected := "export * from './organization'\nexport * from './user'\n"
 	suite.Equal(expected, string(content))
+
+	rootContent, rootErr := os.ReadFile(filepath.Join(suite.outputDir, "index.d.ts"))
+	suite.Require().NoError(rootErr)
+	suite.Equal("export * from './models'\n", string(rootContent))
 }
 
 func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_MultipleCategories() {
@@ -52,7 +56,7 @@ func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_MultipleCategories() {
 	modelsDir := filepath.Join(suite.outputDir, "models")
 	entitiesDir := filepath.Join(suite.outputDir, "entities")
 
-	err := compile.WriteBarrelFiles([]compile.BarrelFileCategory{
+	err := compile.WriteBarrelFiles(suite.outputDir, []compile.BarrelFileCategory{
 		{DirPath: enumsDir, DefinitionNames: []string{"InvoiceStatus", "TaskPriority"}},
 		{DirPath: modelsDir, DefinitionNames: []string{"Invoice"}},
 		{DirPath: entitiesDir, DefinitionNames: []string{"Invoice", "Task"}},
@@ -70,12 +74,17 @@ func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_MultipleCategories() {
 	entityContent, _ := os.ReadFile(filepath.Join(entitiesDir, "index.d.ts"))
 	suite.Contains(string(entityContent), "export * from './invoice'")
 	suite.Contains(string(entityContent), "export * from './task'")
+
+	rootContent, rootErr := os.ReadFile(filepath.Join(suite.outputDir, "index.d.ts"))
+	suite.Require().NoError(rootErr)
+	expected := "export * from './entities'\nexport * from './enums'\nexport * from './models'\n"
+	suite.Equal(expected, string(rootContent))
 }
 
 func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_EmptyCategory_Skipped() {
 	modelsDir := filepath.Join(suite.outputDir, "models")
 
-	err := compile.WriteBarrelFiles([]compile.BarrelFileCategory{
+	err := compile.WriteBarrelFiles(suite.outputDir, []compile.BarrelFileCategory{
 		{DirPath: modelsDir, DefinitionNames: []string{}},
 	})
 
@@ -88,7 +97,7 @@ func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_EmptyCategory_Skipped() 
 func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_SortedAlphabetically() {
 	modelsDir := filepath.Join(suite.outputDir, "models")
 
-	err := compile.WriteBarrelFiles([]compile.BarrelFileCategory{
+	err := compile.WriteBarrelFiles(suite.outputDir, []compile.BarrelFileCategory{
 		{DirPath: modelsDir, DefinitionNames: []string{"Zebra", "Apple", "Mango"}},
 	})
 
@@ -102,7 +111,7 @@ func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_SortedAlphabetically() {
 func (suite *BarrelFilesTestSuite) TestWriteBarrelFiles_KebabCaseNames() {
 	modelsDir := filepath.Join(suite.outputDir, "models")
 
-	err := compile.WriteBarrelFiles([]compile.BarrelFileCategory{
+	err := compile.WriteBarrelFiles(suite.outputDir, []compile.BarrelFileCategory{
 		{DirPath: modelsDir, DefinitionNames: []string{"InvoiceLineItem", "AdminSetting"}},
 	})
 

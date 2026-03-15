@@ -57,6 +57,7 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 			RegistryEntitiesDirPath:   suite.EntitiesDirPath,
 		},
 
+		OutputDirPath:       workingDirPath,
 		GenerateBarrelFiles: true,
 
 		MorpheEnumsConfig: cfg.MorpheEnumsConfig{},
@@ -149,4 +150,10 @@ func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	gtEntityPath1 := gtEntitiesDirPath + "/person.d.ts"
 	suite.FileExists(entityPath1)
 	suite.FileEquals(entityPath1, gtEntityPath1)
+
+	suite.FileEquals(enumsDirPath+"/index.d.ts", gtEnumsDirPath+"/index.d.ts")
+	suite.FileEquals(modelsDirPath+"/index.d.ts", gtModelsDirPath+"/index.d.ts")
+	suite.FileEquals(structuresDirPath+"/index.d.ts", gtStructuresDirPath+"/index.d.ts")
+	suite.FileEquals(entitiesDirPath+"/index.d.ts", gtEntitiesDirPath+"/index.d.ts")
+	suite.FileEquals(workingDirPath+"/index.d.ts", suite.TestGroundTruthDirPath+"/index.d.ts")
 }

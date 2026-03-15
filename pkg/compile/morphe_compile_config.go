@@ -17,7 +17,8 @@ type MorpheCompileConfig struct {
 	cfg.MorpheStructuresConfig
 	cfg.MorpheEntitiesConfig
 
-	FieldCasing        cfg.Casing
+	OutputDirPath       string
+	FieldCasing         cfg.Casing
 	GenerateBarrelFiles bool
 
 	RegistryHooks r.LoadMorpheRegistryHooks
@@ -43,6 +44,7 @@ func DefaultMorpheCompileConfig(
 	baseOutputDirPath string,
 ) MorpheCompileConfig {
 	return MorpheCompileConfig{
+		OutputDirPath: baseOutputDirPath,
 		MorpheLoadRegistryConfig: rcfg.MorpheLoadRegistryConfig{
 			RegistryEnumsDirPath:      path.Join(yamlRegistryPath, "enums"),
 			RegistryModelsDirPath:     path.Join(yamlRegistryPath, "models"),

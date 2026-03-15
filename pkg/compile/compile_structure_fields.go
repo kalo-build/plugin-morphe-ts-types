@@ -2,6 +2,7 @@ package compile
 
 import (
 	"github.com/kalo-build/go-util/core"
+	"github.com/kalo-build/go-util/strcase"
 
 	"github.com/kalo-build/morphe-go/pkg/registry"
 	"github.com/kalo-build/morphe-go/pkg/yaml"
@@ -19,7 +20,7 @@ func getTsFieldsForMorpheStructure(r *registry.Registry, structureFields map[str
 	allFieldNames := core.MapKeysSorted(structureFields)
 	for _, fieldName := range allFieldNames {
 		field := structureFields[fieldName]
-		fieldType, fieldTypeErr := getTsTypeForStructureField(r.GetAllEnums(), field, fieldCasing)
+		fieldType, fieldTypeErr := getTsTypeForStructureField(r.GetAllEnums(), r.GetAllStructures(), field, fieldCasing)
 		if fieldTypeErr != nil {
 			return nil, fieldTypeErr
 		}
@@ -47,10 +48,19 @@ func hasAttribute(attributes []string, target string) bool {
 	return false
 }
 
-func getTsTypeForStructureField(allEnums map[string]yaml.Enum, field yaml.StructureField, fieldCasing cfg.Casing) (tsdef.TsType, error) {
+func getTsTypeForStructureField(allEnums map[string]yaml.Enum, allStructures map[string]yaml.Structure, field yaml.StructureField, fieldCasing cfg.Casing) (tsdef.TsType, error) {
 	tsEnumType := getEnumFieldAsTsFieldType(allEnums, "", string(field.Type), fieldCasing)
 	if tsEnumType.Type != nil {
 		return tsEnumType.Type, nil
+	}
+
+	if allStructures != nil {
+		if _, ok := allStructures[string(field.Type)]; ok {
+			return tsdef.TsTypeObject{
+				ModulePath: "./" + strcase.ToKebabCaseLower(string(field.Type)),
+				Name:       string(field.Type),
+			}, nil
+		}
 	}
 
 	tsType, tsTypeExists := typemap.MorpheStructureFieldToTsField[field.Type]
