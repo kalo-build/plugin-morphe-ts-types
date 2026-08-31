@@ -26,7 +26,7 @@ func WriteTsDefinitionFile(dirPath string, definitionName string, definitionFile
 	definitionFileName := strcase.ToKebabCaseLower(definitionName)
 	definitionFilePath := filepath.Join(dirPath, definitionFileName+".d.ts")
 	if _, readErr := os.ReadDir(dirPath); readErr != nil && os.IsNotExist(readErr) {
-		mkDirErr := os.MkdirAll(dirPath, 0644)
+		mkDirErr := os.MkdirAll(dirPath, 0755)
 		if mkDirErr != nil {
 			return nil, mkDirErr
 		}

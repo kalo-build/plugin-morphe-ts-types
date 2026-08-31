@@ -46,7 +46,7 @@ func (suite *CompileTestSuite) TearDownTest() {
 
 func (suite *CompileTestSuite) TestMorpheToTypescript() {
 	workingDirPath := suite.TestDirPath + "/working"
-	suite.Nil(os.Mkdir(workingDirPath, 0644))
+	suite.Nil(os.Mkdir(workingDirPath, 0755))
 	defer os.RemoveAll(workingDirPath)
 
 	config := compile.MorpheCompileConfig{
