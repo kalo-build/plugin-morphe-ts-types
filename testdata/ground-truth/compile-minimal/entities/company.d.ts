@@ -5,7 +5,7 @@ export type Company = {
 	name: string
 	taxID: string
 	personIDs: number[]
-	persons: Person[]
+	persons?: Person[]
 }
 
 export type CompanyIDPrimary = {

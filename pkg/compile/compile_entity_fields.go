@@ -145,7 +145,7 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheEntityObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
+			tsRelatedField := getRelatedTsFieldForMorpheEntityObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing)
 			allFields = append(allFields, tsRelatedField)
 
 		default:
@@ -166,7 +166,7 @@ func getRelatedTsFieldsForMorpheEntity(r *registry.Registry, entityRelations map
 			}
 			allFields = append(allFields, tsIDField)
 
-			tsRelatedField := getRelatedTsFieldForMorpheEntityObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing, hasAttribute(entityRelation.Attributes, "optional"))
+			tsRelatedField := getRelatedTsFieldForMorpheEntityObjectWithTargetName(entityRelation.Type, relationshipName, targetEntityName, fieldCasing)
 			allFields = append(allFields, tsRelatedField)
 		}
 	}
@@ -217,28 +217,23 @@ func getRelatedTsFieldForMorpheEntityObject(relationType string, relatedEntityNa
 		Name:       relatedEntityName,
 	}
 	if yamlops.IsRelationMany(relationType) {
-		arrayType := tsdef.TsTypeArray{ValueType: objType}
 		tsRelatedField := tsdef.ObjectField{
 			Name: relatedEntityName + "s",
-			Type: arrayType,
-		}
-		if isOptional {
-			tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{ValueType: objType},
+			},
 		}
 		return tsRelatedField
 	}
 
 	tsRelatedField := tsdef.ObjectField{
 		Name: relatedEntityName,
-		Type: objType,
-	}
-	if isOptional {
-		tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: objType}
+		Type: tsdef.TsTypeOptional{ValueType: objType},
 	}
 	return tsRelatedField
 }
 
-func getRelatedTsFieldForMorpheEntityObjectWithTargetName(relationType string, relationshipName string, targetEntityName string, fieldCasing cfg.Casing, isOptional bool) tsdef.ObjectField {
+func getRelatedTsFieldForMorpheEntityObjectWithTargetName(relationType string, relationshipName string, targetEntityName string, fieldCasing cfg.Casing) tsdef.ObjectField {
 	relationshipNameCamel := fieldCasing.Apply(relationshipName)
 	objType := tsdef.TsTypeObject{
 		ModulePath: "./" + strcase.ToKebabCaseLower(targetEntityName),
@@ -246,23 +241,18 @@ func getRelatedTsFieldForMorpheEntityObjectWithTargetName(relationType string, r
 	}
 
 	if yamlops.IsRelationMany(relationType) {
-		arrayType := tsdef.TsTypeArray{ValueType: objType}
 		tsRelatedField := tsdef.ObjectField{
 			Name: relationshipNameCamel + "s",
-			Type: arrayType,
-		}
-		if isOptional {
-			tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: arrayType}
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{ValueType: objType},
+			},
 		}
 		return tsRelatedField
 	}
 
 	tsRelatedField := tsdef.ObjectField{
 		Name: relationshipNameCamel,
-		Type: objType,
-	}
-	if isOptional {
-		tsRelatedField.Type = tsdef.TsTypeOptional{ValueType: objType}
+		Type: tsdef.TsTypeOptional{ValueType: objType},
 	}
 	return tsRelatedField
 }
@@ -302,7 +292,7 @@ func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName s
 		Type: wrapOptional(tsdef.TsTypeString),
 	})
 
-	// Add union type field
+	// Add union type field — always optional per ADR-003 (optionally loaded data)
 	unionTypes := []tsdef.TsType{}
 	for _, targetEntityName := range entityRelation.For {
 		unionTypes = append(unionTypes, tsdef.TsTypeObject{
@@ -311,17 +301,21 @@ func getPolymorphicForTsFieldsForEntity(r *registry.Registry, relationshipName s
 		})
 	}
 
-	unionType := tsdef.TsTypeUnion{Types: unionTypes}
 	if yamlops.IsRelationMany(entityRelation.Type) {
-		arrayType := tsdef.TsTypeArray{ValueType: unionType}
 		allFields = append(allFields, tsdef.ObjectField{
 			Name: relationshipNameCamel + "s",
-			Type: wrapOptional(arrayType),
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeArray{
+					ValueType: tsdef.TsTypeUnion{Types: unionTypes},
+				},
+			},
 		})
 	} else {
 		allFields = append(allFields, tsdef.ObjectField{
 			Name: relationshipNameCamel,
-			Type: wrapOptional(unionType),
+			Type: tsdef.TsTypeOptional{
+				ValueType: tsdef.TsTypeUnion{Types: unionTypes},
+			},
 		})
 	}
 

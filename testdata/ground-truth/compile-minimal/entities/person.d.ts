@@ -7,7 +7,7 @@ export type Person = {
 	lastName: string
 	nationality: Nationality
 	companyID: number
-	company: Company
+	company?: Company
 }
 
 export type PersonIDPrimary = {
